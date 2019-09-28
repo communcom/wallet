@@ -1,0 +1,39 @@
+version: '2.2'
+services:
+  wallet-mongo:
+    container_name: wallet-mongo
+    image: mongo
+    restart: always
+    command: --wiredTigerCacheSizeGB 6.0
+    volumes:
+      - wallet-mongodb-vol:/data/db
+    ports:
+      - 127.0.0.1:27017:27017
+    networks:
+      - services-tier
+    mem_limit: 6144m
+
+  wallet-node:
+    container_name: wallet-node
+    restart: always
+    depends_on:
+      - wallet-mongo
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - services-tier
+    ports:
+      - $GLS_CONNECTOR_HOST:$GLS_CONNECTOR_PORT:$GLS_CONNECTOR_PORT
+      - $GLS_METRICS_HOST:$GLS_METRICS_PORT:$GLS_METRICS_PORT
+    env_file:
+      - .env
+    mem_limit: 2048m
+    cpus: 3
+
+
+volumes:
+  wallet-mongodb-vol:
+
+networks:
+  services-tier:
