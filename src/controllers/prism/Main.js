@@ -5,7 +5,7 @@ const Utils = require('../../utils/Utils');
 const TransferModel = require('../../models/Transfer');
 const BalanceModel = require('../../models/Balance');
 const TokenModel = require('../../models/Token');
-const PoinModel = require('../../models/Point');
+const PointModel = require('../../models/Point');
 const UserMeta = require('../../models/UserMeta');
 const DelegateVote = require('../../models/DelegateVote');
 const Claim = require('../../models/Claim');
@@ -378,9 +378,7 @@ class Main {
             maximum_supply: args.maximum_supply,
         };
 
-        const newPoint = new PoinModel(newPointObject);
-
-        await newPoint.save();
+        await PointModel.create(newPointObject);
 
         verbose('Created point', sym, 'info:', newPointObject);
     }
@@ -392,11 +390,11 @@ class Main {
             return;
         }
 
-        const pointObject = await PoinModel.findOne({ sym: symbol });
+        const pointObject = await PointModel.findOne({ sym: symbol });
 
         if (pointObject) {
             const reserve = Utils.calculateQuantity(pointObject.reserve, args.quantity);
-            await PoinModel.updateOne(
+            await PointModel.updateOne(
                 { _id: pointObject._id },
                 {
                     $set: {
@@ -413,11 +411,11 @@ class Main {
         const { args } = action;
 
         const { sym } = Utils.parseAsset(args.quantity);
-        const pointObject = await PoinModel.findOne({ sym });
+        const pointObject = await PointModel.findOne({ sym });
 
         if (pointObject) {
             const supply = Utils.calculateQuantity(pointObject.supply, args.quantity);
-            await PoinModel.updateOne(
+            await PointModel.updateOne(
                 { _id: pointObject._id },
                 {
                     $set: {
