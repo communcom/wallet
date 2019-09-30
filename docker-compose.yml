@@ -13,8 +13,8 @@ services:
       - services-tier
     mem_limit: 6144m
 
-  wallet-node:
-    container_name: wallet-node
+  wallet-node-api:
+    container_name: wallet-node-api
     restart: always
     depends_on:
       - wallet-mongo
@@ -25,12 +25,30 @@ services:
       - services-tier
     ports:
       - $GLS_CONNECTOR_HOST:$GLS_CONNECTOR_PORT:$GLS_CONNECTOR_PORT
-      - $GLS_METRICS_HOST:$GLS_METRICS_PORT:$GLS_METRICS_PORT
+      - $GLS_METRICS_API_HOST:$GLS_METRICS_API_PORT:$GLS_METRICS_API_PORT
+    env_file:
+      - .env
+    environment:
+      - GLS_ENABLE_READ_MODE=true
+    mem_limit: 2048m
+    cpus: 3
+
+  wallet-node-writer:
+    container_name: wallet-node-writer
+    restart: always
+    depends_on:
+      - wallet-mongo
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - services-tier
+    environment:
+      - GLS_ENABLE_WRITE_MODE=true
     env_file:
       - .env
     mem_limit: 2048m
     cpus: 3
-
 
 volumes:
   wallet-mongodb-vol:

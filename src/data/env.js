@@ -11,4 +11,6 @@ module.exports = {
     GLS_SKIP_GENESIS: Boolean(env.GLS_SKIP_GENESIS) && env.GLS_SKIP_GENESIS !== 'false',
     GLS_CYBERWAY_HTTP_URL: env.GLS_CYBERWAY_HTTP_URL,
     GLS_VERBOSE_LOGS: Boolean(env.GLS_VERBOSE_LOGS) && env.GLS_VERBOSE_LOGS !== 'false',
+    GLS_ENABLE_READ_MODE: env.GLS_ENABLE_READ_MODE === 'true',
+    GLS_ENABLE_WRITE_MODE: env.GLS_ENABLE_WRITE_MODE === 'true',
 };
