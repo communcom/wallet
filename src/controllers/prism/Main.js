@@ -5,6 +5,7 @@ const Utils = require('../../utils/Utils');
 const TransferModel = require('../../models/Transfer');
 const BalanceModel = require('../../models/Balance');
 const TokenModel = require('../../models/Token');
+const PoinModel = require('../../models/Point');
 const UserMeta = require('../../models/UserMeta');
 const DelegateVote = require('../../models/DelegateVote');
 const Claim = require('../../models/Claim');
@@ -93,6 +94,14 @@ class Main {
                 }
             }
 
+            if (action.code === 'cyber.token' && action.receiver === 'comn.point') {
+                switch (action.action) {
+                    case 'transfer':
+                        await this._handleRestockTokens(action);
+                        break;
+                }
+            }
+
             if (action.action === 'newusername') {
                 await this._handleCreateUsernameAction(action, trxData);
             }
@@ -111,6 +120,20 @@ class Main {
                 action.action === 'recallvote'
             ) {
                 await this._handleRecallVoteAction(action);
+            }
+
+            if (action.receiver === 'comn.point' && action.code === 'comn.point') {
+                switch (action.action) {
+                    case 'create':
+                        await this._handlePointCreateEvent(action);
+                        break;
+                    case 'issue':
+                        await this._handleIssuePoint(action);
+                        break;
+                    case 'open':
+                        // TODO
+                        break;
+                }
             }
 
             await this._proposals.disperseAction(action, transaction);
@@ -339,6 +362,71 @@ class Main {
             await newToken.save();
 
             verbose('Created', sym, 'token info:', newTokenInfo);
+        }
+    }
+
+    async _handlePointCreateEvent(action) {
+        const { args } = action;
+        const { sym, quantityRaw } = Utils.parseAsset(args.maximum_supply);
+
+        const [_, decs] = quantityRaw.split('.');
+
+        const newPointObject = {
+            sym,
+            decs: decs.length, // FIXME bad way
+            issuer: args.issuer,
+            maximum_supply: args.maximum_supply,
+        };
+
+        const newPoint = new PoinModel(newPointObject);
+
+        await newPoint.save();
+
+        verbose('Created point', sym, 'info:', newPointObject);
+    }
+
+    async _handleRestockTokens(action) {
+        const { args } = action;
+        const [memo, symbol] = args.memo.match(/^restock\: ([A-Z]+)$/);
+        if (!memo) {
+            return;
+        }
+
+        const pointObject = await PoinModel.findOne({ sym: symbol });
+
+        if (pointObject) {
+            const reserve = Utils.calculateQuantity(pointObject.reserve, args.quantity);
+            await PoinModel.updateOne(
+                { _id: pointObject._id },
+                {
+                    $set: {
+                        reserve,
+                    },
+                }
+            );
+
+            verbose('Updated', symbol, args.memo, reserve);
+        }
+    }
+
+    async _handleIssuePoint(action) {
+        const { args } = action;
+
+        const { sym } = Utils.parseAsset(args.quantity);
+        const pointObject = await PoinModel.findOne({ sym });
+
+        if (pointObject) {
+            const supply = Utils.calculateQuantity(pointObject.supply, args.quantity);
+            await PoinModel.updateOne(
+                { _id: pointObject._id },
+                {
+                    $set: {
+                        supply,
+                    },
+                }
+            );
+
+            verbose('Updated point', sym, 'supply:', supply);
         }
     }
 
