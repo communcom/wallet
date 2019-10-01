@@ -1,4 +1,4 @@
-const core = require('gls-core-service');
+const core = require('cyberway-core-service');
 const BasicMain = core.services.BasicMain;
 const env = require('./data/env');
 const Prism = require('./services/Prism');
@@ -15,7 +15,14 @@ class Main extends BasicMain {
         this.startMongoBeforeBoot(null, {
             poolSize: 500,
         });
-        this.addNested(prism, connector);
+
+        if (env.GLS_ENABLE_READ_MODE) {
+            this.addNested(connector);
+        }
+
+        if (env.GLS_ENABLE_WRITE_MODE) {
+            this.addNested(prism);
+        }
     }
 
     async boot() {
