@@ -143,6 +143,15 @@ class Utils {
             .dp(0)
             .toString();
     }
+
+    static calculateQuantity(q1, q2) {
+        if (!q1) {
+            return q2;
+        }
+        const paresedQ1 = Utils.parseAsset(q1);
+        const paresedQ2 = Utils.parseAsset(q2);
+        return `${paresedQ1.quantity.plus(paresedQ2.quantity)} ${paresedQ2.sym}`;
+    }
 }
 
 module.exports = Utils;
