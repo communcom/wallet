@@ -133,6 +133,9 @@ class Main {
                     case 'open':
                         // TODO
                         break;
+                    case 'transfer':
+                        await this._handlePointTransfer(action, trxData);
+                        break;
                 }
             }
 
@@ -192,11 +195,9 @@ class Main {
             memo,
         };
 
-        const transfer = new TransferModel(transferObject);
+        await TransferModel.create(transferObject);
 
-        await transfer.save();
-
-        verbose('Created transfer object:', transfer.toObject());
+        verbose('Created transfer object:', transferObject);
     }
 
     async _handleTransfer({ trxData, sender, receiver, quantity, memo }) {
@@ -426,6 +427,16 @@ class Main {
 
             verbose('Updated point', sym, 'supply:', supply);
         }
+    }
+
+    async _handlePointTransfer(action, trxData) {
+        await this._handleTransfer({
+            trxData,
+            sender: action.args.from,
+            receiver: action.args.to,
+            quantity: action.args.quantity,
+            memo: action.args.memo,
+        });
     }
 
     async _handleDelegateVoteAction(action) {
