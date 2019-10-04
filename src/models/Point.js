@@ -4,7 +4,7 @@ const MongoDB = core.services.MongoDB;
 module.exports = MongoDB.makeModel(
     'Point',
     {
-        sym: {
+        symbol: {
             type: String,
             required: true,
         },
@@ -25,13 +25,22 @@ module.exports = MongoDB.makeModel(
             type: String,
             required: true,
         },
+        logo:{
+            type: String,
+        },
+        cw: {
+            type: String,
+        },
+        fee: {
+            type: String,
+        },
     },
     {
         index: [
             // Default
             {
                 fields: {
-                    sym: 1,
+                    symbol: 1,
                 },
                 options: {
                     unique: true,

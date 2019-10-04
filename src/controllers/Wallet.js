@@ -1,9 +1,10 @@
 const core = require('cyberway-core-service');
 const BasicController = core.controllers.Basic;
-const Utils = require('../utils/Utils');
 
+const BalanceModel = require('../models/Balance');
 const TransferModel = require('../models/Transfer');
 const TokenModel = require('../models/Token');
+const PointModel = require('../models/Point');
 const Claim = require('../models/Claim');
 
 class Wallet extends BasicController {
@@ -190,15 +191,43 @@ class Wallet extends BasicController {
         return { items, sequenceKey: newSequenceKey };
     }
 
-    async getBalance({ userId, currencies, type }) {
-        const balances = await Utils.getBalance({
+    async getBalance({ userId }) {
+        const result = {
             userId,
-            currencies,
-            type,
-            shouldFetchStake: true,
-        });
+            balances: [],
+        };
 
-        return balances;
+        const balanceObject = await BalanceModel.findOne({ account: userId });
+        if (balanceObject) {
+            const pointsSymbols = [];
+            const balancesMap = new Map();
+
+            for (const { symbol, balance } of balanceObject.balances) {
+                pointsSymbols.push({ symbol });
+
+                balancesMap.set(symbol, {
+                    symbol,
+                    balance,
+                });
+            }
+
+            const points = await PointModel.find({
+                $or: pointsSymbols,
+            });
+
+            for (const point of points) {
+                balancesMap.set(point.symbol, {
+                    ...balancesMap.get(point.symbol),
+                    decs: point.decs,
+                    issuer: point.issuer,
+                    logo: point.logo,
+                });
+            }
+
+            result.balances = Array.from(balancesMap.values());
+        }
+
+        return result;
     }
 }
 
