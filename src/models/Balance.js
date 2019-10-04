@@ -4,22 +4,21 @@ const MongoDB = core.services.MongoDB;
 module.exports = MongoDB.makeModel(
     'Balance',
     {
-        name: {
+        account: {
             type: String,
+            required: true,
         },
         balances: {
             type: [
                 {
-                    type: String,
-                    required: true,
-                },
-            ],
-        },
-        payments: {
-            type: [
-                {
-                    type: String,
-                    required: true,
+                    symbol: {
+                        type: String,
+                        required: true,
+                    },
+                    balance: {
+                        type: String,
+                        required: true,
+                    },
                 },
             ],
         },
@@ -29,7 +28,7 @@ module.exports = MongoDB.makeModel(
             // Default
             {
                 fields: {
-                    name: 1,
+                    account: 1,
                 },
                 options: {
                     unique: true,

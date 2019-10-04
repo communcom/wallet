@@ -17,17 +17,6 @@ class Connector extends BasicConnector {
                     handler: this._wallet.getBalance,
                     scope: this._wallet,
                     validation: {
-                        properties: {
-                            currencies: {
-                                type: 'array',
-                                default: ['all'],
-                            },
-                            type: {
-                                type: 'string',
-                                enum: ['all', 'liquid'],
-                                default: 'all',
-                            },
-                        },
                     },
                 },
                 getTransferHistory: {
