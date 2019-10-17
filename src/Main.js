@@ -1,9 +1,10 @@
 const core = require('cyberway-core-service');
 const BasicMain = core.services.BasicMain;
+
 const env = require('./data/env');
+
 const Prism = require('./services/Prism');
 const Connector = require('./services/Connector');
-const ServiceMetaModel = require('./models/ServiceMeta');
 
 class Main extends BasicMain {
     constructor() {
@@ -22,14 +23,6 @@ class Main extends BasicMain {
 
         if (env.GLS_ENABLE_WRITE_MODE) {
             this.addNested(prism);
-        }
-    }
-
-    async boot() {
-        if ((await ServiceMetaModel.countDocuments()) === 0) {
-            const model = new ServiceMetaModel();
-
-            await model.save();
         }
     }
 }

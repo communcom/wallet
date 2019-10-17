@@ -1,23 +1,18 @@
 const core = require('cyberway-core-service');
 const Logger = core.utils.Logger;
-const BigNum = core.types.BigNum;
+
 const Utils = require('../../utils/Utils');
+const { verbose } = require('../../utils/logs');
+
 const TransferModel = require('../../models/Transfer');
 const BalanceModel = require('../../models/Balance');
 const PointModel = require('../../models/Point');
 const UserMeta = require('../../models/UserMeta');
-const DelegateVote = require('../../models/DelegateVote');
 const Claim = require('../../models/Claim');
-const Proposals = require('./Proposals');
-const { verbose } = require('../../utils/logs');
 
 const REVERSIBLE_MODELS = [TransferModel, Claim];
 
 class Main {
-    constructor() {
-        this._proposals = new Proposals();
-    }
-
     async disperse({ transactions, blockTime, blockNum }) {
         for (const transaction of transactions) {
             await this._disperseTransaction({
@@ -105,22 +100,6 @@ class Main {
                 await this._handleCreateUsernameAction(action, trxData);
             }
 
-            if (
-                action.receiver === 'cyber.stake' &&
-                action.code === 'cyber.stake' &&
-                action.action === 'delegatevote'
-            ) {
-                await this._handleDelegateVoteAction(action);
-            }
-
-            if (
-                action.receiver === 'cyber.stake' &&
-                action.code === 'cyber.stake' &&
-                action.action === 'recallvote'
-            ) {
-                await this._handleRecallVoteAction(action);
-            }
-
             if (action.receiver === 'comn.point' && action.code === 'comn.point') {
                 switch (action.action) {
                     case 'create':
@@ -145,8 +124,6 @@ class Main {
                         break;
                 }
             }
-
-            await this._proposals.disperseAction(action, transaction);
         }
     }
 
@@ -156,8 +133,7 @@ class Main {
                 case 'cyber.token':
                 case 'comn.point':
                     await this._handleBalanceEvent(event);
-                    // Disabled
-                    // await this._handleCurrencyEvent(event);
+                    await this._handleCurrencyEvent(event);
                     break;
                 default:
                     return;
@@ -228,7 +204,7 @@ class Main {
             return;
         }
 
-        const { sym } = Utils.parseAsset(args.quantity);
+        const { sym } = Utils.parseAsset(event.args.max_supply);
         const pointObject = await PointModel.findOne({ symbol: sym });
 
         if (pointObject) {
@@ -313,10 +289,6 @@ class Main {
     }
 
     async _handleCreateUsernameAction(action) {
-        if (!action.args) {
-            throw { code: 812, message: 'Invalid action object' };
-        }
-
         const userId = action.args.owner;
         const username = action.args.name;
 
@@ -347,10 +319,6 @@ class Main {
     }
 
     async _handleUpdateMetaAction(action) {
-        if (!action.args) {
-            throw { code: 812, message: 'Invalid action object' };
-        }
-
         const meta = {
             userId: action.args.account,
             name: action.args.meta.name,
@@ -472,78 +440,6 @@ class Main {
             );
 
             verbose('Updated point logo', args.commun_code);
-        }
-    }
-
-    async _handleDelegateVoteAction(action) {
-        const { grantor_name: grantor, recipient_name: recipient, quantity } = action.args;
-
-        const { quantity: bigNumQuantity, sym } = Utils.parseAsset(quantity);
-
-        const delegateVoteInfo = {
-            grantor,
-            recipient,
-            sym,
-        };
-
-        const savedVote = await DelegateVote.findOne(delegateVoteInfo);
-
-        if (savedVote) {
-            const quantityNew = new BigNum(savedVote.quantity).plus(bigNumQuantity);
-            const newDelegateVoteInfo = {
-                ...delegateVoteInfo,
-                quantity: quantityNew,
-            };
-
-            await DelegateVote.updateOne(
-                { _id: savedVote._id },
-                {
-                    $set: newDelegateVoteInfo,
-                }
-            );
-            verbose(
-                `Changed delegate vote for ${recipient}: ${JSON.stringify(
-                    newDelegateVoteInfo,
-                    null,
-                    2
-                )}`
-            );
-        } else {
-            const newDelegateVoteInfo = {
-                ...delegateVoteInfo,
-                quantity: bigNumQuantity,
-            };
-
-            await DelegateVote.create(newDelegateVoteInfo);
-            verbose(
-                `Created delegate vote for ${recipient}: ${JSON.stringify(
-                    newDelegateVoteInfo,
-                    null,
-                    2
-                )}`
-            );
-        }
-    }
-
-    async _handleRecallVoteAction(action) {
-        const {
-            grantor_name: grantor,
-            recipient_name: recipient,
-            token_code: sym,
-            pct,
-        } = action.args;
-
-        const vote = await DelegateVote.findOne({
-            grantor,
-            recipient,
-            sym,
-        });
-
-        if (vote) {
-            await DelegateVote.updateOne(
-                { _id: vote._id },
-                { $set: { quantity: vote.quantity.times(1 - pct / 10000) } }
-            );
         }
     }
 }

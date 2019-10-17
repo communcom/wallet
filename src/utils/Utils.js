@@ -5,8 +5,7 @@ const { TextEncoder, TextDecoder } = require('text-encoding');
 const env = require('../data/env');
 const Logger = core.utils.Logger;
 const BigNum = core.types.BigNum;
-const BalanceModel = require('../models/Balance');
-const TokenModel = require('../models/Token');
+
 
 const RPC = new JsonRpc(env.GLS_CYBERWAY_HTTP_URL, { fetch });
 
@@ -79,57 +78,6 @@ class Utils {
         return (
             new BigNum(quantity.amount).shiftedBy(-quantity.decs).toString() + ' ' + quantity.sym
         );
-    }
-
-    static async getBalance({ userId, currencies, shouldFetchStake = false }) {
-        const result = {
-            userId,
-        };
-
-        let tokensMap = {};
-
-        const balanceObject = await BalanceModel.findOne({ name: userId });
-
-        if (balanceObject) {
-            result.liquid = {
-                balances: {},
-                payments: {},
-            };
-            if (currencies.includes('all')) {
-                const allCurrencies = await TokenModel.find(
-                    {},
-                    { _id: false, sym: true },
-                    { lean: true }
-                );
-
-                for (const currency of allCurrencies) {
-                    tokensMap[currency.sym] = true;
-                }
-            } else {
-                for (const token of currencies) {
-                    tokensMap[token] = true;
-                }
-            }
-            for (const tokenBalance of balanceObject.balances) {
-                const { sym, quantityRaw } = await Utils.parseAsset(tokenBalance);
-                if (tokensMap[sym]) {
-                    result.liquid.balances[sym] = quantityRaw;
-                }
-            }
-            for (const tokenPayments of balanceObject.payments) {
-                const { sym, quantityRaw } = await Utils.parseAsset(tokenPayments);
-                if (tokensMap[sym]) {
-                    result.liquid.payments[sym] = quantityRaw;
-                }
-            }
-        }
-
-        if (shouldFetchStake) {
-            const { stake_info: stakeInfo } = await Utils.getAccount({ userId });
-            result.stakeInfo = stakeInfo;
-        }
-
-        return result;
     }
 
     static calculateConvertAmount({ baseRaw, multiplierRaw, dividerRaw }) {

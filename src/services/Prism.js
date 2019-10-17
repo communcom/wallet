@@ -1,10 +1,9 @@
 const core = require('cyberway-core-service');
 const BasicService = core.services.Basic;
 const BlockSubscribe = core.services.BlockSubscribe;
-const { Logger } = core.utils;
-const env = require('../data/env');
+const Logger = core.utils.Logger;
+
 const MainPrismController = require('../controllers/prism/Main');
-const ServiceMetaModel = require('../models/ServiceMeta');
 
 class Prism extends BasicService {
     constructor() {
@@ -14,8 +13,6 @@ class Prism extends BasicService {
     }
 
     async start() {
-        const info = await this._getMeta();
-
         const subscriber = new BlockSubscribe({
             handler: this._handleBlock.bind(this),
         });
@@ -33,6 +30,7 @@ class Prism extends BasicService {
             case 'IRREVERSIBLE_BLOCK':
                 await this._mainPrismController.registerLIB(data.blockNum);
                 break;
+
             case 'BLOCK':
                 try {
                     await this._mainPrismController.disperse(data);
@@ -46,14 +44,6 @@ class Prism extends BasicService {
                 Logger.info('STARTING FORK ON BLOCK', data.baseBlockNum);
                 await this._mainPrismController.handleFork(data.baseBlockNum);
         }
-    }
-
-    async _getMeta() {
-        return await ServiceMetaModel.findOne({}, {}, { lean: true });
-    }
-
-    async _updateMeta(params) {
-        await ServiceMetaModel.updateOne({}, { $set: params });
     }
 }
 

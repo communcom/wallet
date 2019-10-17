@@ -84,9 +84,8 @@ class Wallet extends BasicController {
         };
     }
 
-    async getTransferHistory({ userId, direction, currencies, sequenceKey, limit }) {
+    async getTransferHistory({ userId, direction, offset, limit }) {
         const directionFilter = [];
-        const currenciesFilter = [];
 
         if (direction !== 'in') {
             directionFilter.push({ sender: userId });
@@ -96,23 +95,9 @@ class Wallet extends BasicController {
             directionFilter.push({ receiver: userId });
         }
 
-        if (!currencies.includes('all')) {
-            for (const sym of currencies) {
-                currenciesFilter.push({ sym });
-            }
-        }
-
         const filter = {
             $and: [{ $or: [...directionFilter] }],
         };
-
-        if (currenciesFilter.length > 0) {
-            filter.$and.push({ $or: [...currenciesFilter] });
-        }
-
-        if (sequenceKey) {
-            filter._id = { $lt: sequenceKey };
-        }
 
         const pipeline = [
             {
@@ -122,9 +107,6 @@ class Wallet extends BasicController {
                 $sort: {
                     _id: -1,
                 },
-            },
-            {
-                $limit: limit,
             },
             {
                 $lookup: {
@@ -144,7 +126,9 @@ class Wallet extends BasicController {
             },
         ];
 
-        const transfers = await TransferModel.aggregate(pipeline);
+        const transfers = await TransferModel.aggregate(pipeline)
+            .skip(offset)
+            .limit(limit);
 
         const items = [];
 
@@ -180,15 +164,7 @@ class Wallet extends BasicController {
             });
         }
 
-        let newSequenceKey;
-
-        if (items.length < limit) {
-            newSequenceKey = null;
-        } else {
-            newSequenceKey = items[items.length - 1].id;
-        }
-
-        return { items, sequenceKey: newSequenceKey };
+        return { items };
     }
 
     async getBalance({ userId }) {
