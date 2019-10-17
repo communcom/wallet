@@ -1,5 +1,6 @@
 const core = require('cyberway-core-service');
 const BasicConnector = core.services.Connector;
+
 const Wallet = require('../controllers/Wallet');
 
 class Connector extends BasicConnector {
@@ -29,19 +30,6 @@ class Connector extends BasicConnector {
                                 type: 'string',
                                 enum: ['in', 'out', 'all'],
                                 default: 'all',
-                            },
-                        },
-                    },
-                },
-                getTokensInfo: {
-                    inherits: ['pagination'],
-                    handler: this._wallet.getTokensInfo,
-                    scope: this._wallet,
-                    validation: {
-                        properties: {
-                            currencies: {
-                                type: 'array',
-                                default: ['all'],
                             },
                         },
                     },

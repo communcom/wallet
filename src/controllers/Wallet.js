@@ -3,7 +3,6 @@ const BasicController = core.controllers.Basic;
 
 const BalanceModel = require('../models/Balance');
 const TransferModel = require('../models/Transfer');
-const TokenModel = require('../models/Token');
 const PointModel = require('../models/Point');
 const Claim = require('../models/Claim');
 
@@ -43,43 +42,6 @@ class Wallet extends BasicController {
 
         return {
             claims,
-            newSequenceKey,
-        };
-    }
-
-    async getTokensInfo({ currencies, limit, sequenceKey }) {
-        const filter = {};
-
-        if (!currencies.includes('all')) {
-            filter.$or = currencies.map(currency => ({
-                sym: currency,
-            }));
-        }
-
-        if (sequenceKey) {
-            filter._id = {
-                $gt: sequenceKey,
-            };
-        }
-
-        const tokensList = await TokenModel.find(filter, {}, { lean: true }).limit(limit);
-
-        let newSequenceKey;
-
-        if (tokensList.length < limit) {
-            newSequenceKey = null;
-        } else {
-            newSequenceKey = tokensList[tokensList.length - 1]._id;
-        }
-
-        return {
-            tokens: tokensList.map(tokenObject => ({
-                id: tokenObject._id,
-                sym: tokenObject.sym,
-                issuer: tokenObject.issuer,
-                supply: tokenObject.supply,
-                maxSupply: tokenObject.max_supply,
-            })),
             newSequenceKey,
         };
     }
