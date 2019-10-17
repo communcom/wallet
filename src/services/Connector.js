@@ -1,5 +1,6 @@
 const core = require('cyberway-core-service');
 const BasicConnector = core.services.Connector;
+
 const Wallet = require('../controllers/Wallet');
 
 class Connector extends BasicConnector {
@@ -25,27 +26,10 @@ class Connector extends BasicConnector {
                     scope: this._wallet,
                     validation: {
                         properties: {
-                            currencies: {
-                                type: 'array',
-                                default: ['all'],
-                            },
                             direction: {
                                 type: 'string',
                                 enum: ['in', 'out', 'all'],
                                 default: 'all',
-                            },
-                        },
-                    },
-                },
-                getTokensInfo: {
-                    inherits: ['pagination'],
-                    handler: this._wallet.getTokensInfo,
-                    scope: this._wallet,
-                    validation: {
-                        properties: {
-                            currencies: {
-                                type: 'array',
-                                default: ['all'],
                             },
                         },
                     },
@@ -73,8 +57,9 @@ class Connector extends BasicConnector {
                     pagination: {
                         validation: {
                             properties: {
-                                sequenceKey: {
-                                    type: ['string', 'null'],
+                                offset: {
+                                    type: 'number',
+                                    default: 0,
                                 },
                                 limit: {
                                     type: 'number',
@@ -105,8 +90,6 @@ class Connector extends BasicConnector {
                 },
             },
         });
-
-        await super.setDefaultResponse(null);
     }
 }
 
