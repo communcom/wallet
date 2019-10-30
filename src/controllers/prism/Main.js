@@ -88,7 +88,7 @@ class Main {
                 }
             }
 
-            if (action.code === 'cyber.token' && action.receiver === 'comn.point') {
+            if (action.code === 'cyber.token' && action.receiver === 'c.point') {
                 switch (action.action) {
                     case 'transfer':
                         await this._handleRestockTokens(action);
@@ -100,7 +100,7 @@ class Main {
                 await this._handleCreateUsernameAction(action, trxData);
             }
 
-            if (action.receiver === 'comn.point' && action.code === 'comn.point') {
+            if (action.receiver === 'c.point' && action.code === 'c.point') {
                 switch (action.action) {
                     case 'create':
                         await this._handlePointCreateEvent(action);
@@ -117,7 +117,7 @@ class Main {
                 }
             }
 
-            if (action.receiver === 'comn.list' && action.code === 'comn.list') {
+            if (action.receiver === 'c.list' && action.code === 'c.list') {
                 switch (action.action) {
                     case 'setinfo':
                         await this._handleSetInfo(action);
@@ -131,7 +131,7 @@ class Main {
         for (const event of events) {
             switch (event.code) {
                 case 'cyber.token':
-                case 'comn.point':
+                case 'c.point':
                     await this._handleBalanceEvent(event);
                     await this._handleCurrencyEvent(event);
                     break;
@@ -406,6 +406,10 @@ class Main {
 
     async _handleOpenBalance(action) {
         const { args } = action;
+
+        if (!args.commun_code) {
+            return;
+        }
 
         await this._createOrUpdateUserBalance({
             account: args.owner,
