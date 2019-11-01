@@ -9,6 +9,7 @@ const BalanceModel = require('../../models/Balance');
 const PointModel = require('../../models/Point');
 const UserMeta = require('../../models/UserMeta');
 const Claim = require('../../models/Claim');
+const UserGem = require('../../models/UserGem');
 
 const REVERSIBLE_MODELS = [TransferModel, Claim];
 
@@ -134,6 +135,10 @@ class Main {
                 case 'c.point':
                     await this._handleBalanceEvent(event);
                     await this._handleCurrencyEvent(event);
+                    break;
+                case 'c.gallery':
+                    await this.handleUserGemState(event);
+                    await this.handleUserGemChop(event);
                     break;
                 default:
                     return;
@@ -444,6 +449,93 @@ class Main {
             );
 
             verbose('Updated point logo', args.commun_code);
+        }
+    }
+
+    async handleUserGemState(event) {
+        if (!(event.event === 'gemstate')) {
+            return;
+        }
+        const { tracery, owner, creator, points, pledge_points, damn, shares } = event.args;
+        const userGemModel = await UserGem.findOne({ userId: owner });
+
+        if (userGemModel) {
+            await UserGem.updateOne(
+                { userId: owner },
+                {
+                    $push: {
+                        gemstates: {
+                            tracery,
+                            owner,
+                            creator,
+                            points,
+                            pledge_points,
+                            damn,
+                            shares,
+                        },
+                    },
+                }
+            );
+            verbose('Added user gemstate:', owner, tracery);
+        } else {
+            await UserGem.create({
+                userId: owner,
+                gemstates: [
+                    {
+                        tracery,
+                        owner,
+                        creator,
+                        points,
+                        pledge_points,
+                        damn,
+                        shares,
+                    },
+                ],
+            });
+
+            verbose('Created user gemstate:', owner, tracery);
+        }
+    }
+
+    async handleUserGemChop(event) {
+        if (!(event.event === 'gemchop')) {
+            return;
+        }
+
+        const { tracery, owner, creator, reward } = event.args;
+
+        const userGemModel = await UserGem.findOne({ userId: owner });
+
+        if (userGemModel) {
+            await UserGem.updateOne(
+                { userId: owner },
+                {
+                    $push: {
+                        gemchops: {
+                            tracery,
+                            owner,
+                            creator,
+                            reward,
+                        },
+                    },
+                }
+            );
+
+            verbose('Added user gemchop:', owner, tracery);
+        } else {
+            await UserGem.create({
+                userId: owner,
+                gemchops: [
+                    {
+                        tracery,
+                        owner,
+                        creator,
+                        reward,
+                    },
+                ],
+            });
+
+            verbose('Created user gemchop:', owner, tracery);
         }
     }
 }
