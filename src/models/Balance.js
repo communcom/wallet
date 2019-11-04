@@ -4,7 +4,7 @@ const MongoDB = core.services.MongoDB;
 module.exports = MongoDB.makeModel(
     'Balance',
     {
-        account: {
+        userId: {
             type: String,
             required: true,
         },
@@ -25,10 +25,9 @@ module.exports = MongoDB.makeModel(
     },
     {
         index: [
-            // Default
             {
                 fields: {
-                    account: 1,
+                    userId: 1,
                 },
                 options: {
                     unique: true,

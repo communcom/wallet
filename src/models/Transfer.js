@@ -16,7 +16,7 @@ module.exports = MongoDB.makeModel(
             type: String,
             required: true,
         },
-        sym: {
+        symbol: {
             type: String,
             required: true,
         },
@@ -39,6 +39,20 @@ module.exports = MongoDB.makeModel(
             type: Date,
             required: true,
         },
+        meta: {
+            transferType: {
+                type: String,
+                enum: ['transfer', 'convert'],
+            },
+            assetType: {
+                type: String,
+                enum: ['token', 'point'],
+            },
+            exchangeAmount: {
+                type: Number,
+                default: undefined,
+            },
+        },
     },
     {
         index: [
@@ -46,7 +60,7 @@ module.exports = MongoDB.makeModel(
                 fields: {
                     sender: 1,
                     receiver: 1,
-                    sym: 1,
+                    symbol: 1,
                     _id: -1,
                 },
                 options: {
@@ -56,7 +70,7 @@ module.exports = MongoDB.makeModel(
             {
                 fields: {
                     receiver: 1,
-                    sym: 1,
+                    symbol: 1,
                     _id: -1,
                 },
                 options: {
@@ -66,7 +80,7 @@ module.exports = MongoDB.makeModel(
             {
                 fields: {
                     sender: 1,
-                    sym: 1,
+                    symbol: 1,
                     _id: -1,
                 },
                 options: {
@@ -75,7 +89,7 @@ module.exports = MongoDB.makeModel(
             },
             {
                 fields: {
-                    sym: 1,
+                    symbol: 1,
                     _id: -1,
                 },
                 options: {

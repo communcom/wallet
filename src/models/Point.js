@@ -25,7 +25,7 @@ module.exports = MongoDB.makeModel(
             type: String,
             required: true,
         },
-        logo:{
+        logo: {
             type: String,
         },
         cw: {
@@ -33,6 +33,23 @@ module.exports = MongoDB.makeModel(
         },
         fee: {
             type: String,
+        },
+        issueHistory: {
+            type: [
+                {
+                    quantity: {
+                        type: String,
+                        required: true,
+                    },
+                    memo: {
+                        type: String,
+                    },
+                    timestamp: {
+                        type: Date,
+                        required: true,
+                    },
+                },
+            ],
         },
     },
     {

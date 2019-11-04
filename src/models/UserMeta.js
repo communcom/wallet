@@ -12,16 +12,21 @@ module.exports = MongoDB.makeModel(
             type: String,
             default: null,
         },
-        name: {
-            type: String,
-            default: null,
-        },
     },
     {
         index: [
             {
                 fields: {
                     userId: 1,
+                },
+                options: {
+                    unique: true,
+                    background: true,
+                },
+            },
+            {
+                fields: {
+                    username: 1,
                 },
                 options: {
                     unique: true,
