@@ -46,19 +46,10 @@ class Wallet extends BasicController {
         };
     }
 
-    async getTransferHistory({ userId, direction, offset, limit }) {
-        const directionFilter = [];
-
-        if (direction !== 'in') {
-            directionFilter.push({ sender: userId });
-        }
-
-        if (direction !== 'out') {
-            directionFilter.push({ receiver: userId });
-        }
-
+    async getTransferHistory({ userId, offset, limit }) {
         const filter = {
-            $and: [{ $or: [...directionFilter] }],
+            $or: [{ sender: userId }, { receiver: userId }],
+            sender: { $ne: 'comn.point' },
         };
 
         const pipeline = [
@@ -104,25 +95,29 @@ class Wallet extends BasicController {
 
             if (transfer.receiverMeta[0]) {
                 receiverName.username = transfer.receiverMeta[0].username;
-                receiverName.name = transfer.receiverMeta[0].name;
             }
 
             if (transfer.senderMeta[0]) {
                 senderName.username = transfer.senderMeta[0].username;
-                senderName.name = transfer.senderMeta[0].name;
             }
+
+            const meta = {
+                ...transfer.meta,
+                direction: transfer.sender === userId ? 'send' : 'receive',
+            };
 
             items.push({
                 id: transfer._id,
                 sender: senderName,
                 receiver: receiverName,
                 quantity: transfer.quantity,
-                sym: transfer.sym,
+                symbol: transfer.sym,
                 trxId: transfer.trxId,
                 memo: transfer.memo,
                 blockNum: transfer.blockNum,
                 timestamp: transfer.timestamp,
                 isIrreversible: transfer.isIrreversible,
+                meta,
             });
         }
 
@@ -135,7 +130,7 @@ class Wallet extends BasicController {
             balances: [],
         };
 
-        const balanceObject = await BalanceModel.findOne({ account: userId });
+        const balanceObject = await BalanceModel.findOne({ userId });
         if (balanceObject) {
             const pointsSymbols = [];
             const balancesMap = new Map();

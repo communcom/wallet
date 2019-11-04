@@ -5,8 +5,6 @@ const { TextEncoder, TextDecoder } = require('text-encoding');
 const env = require('../data/env');
 const Logger = core.utils.Logger;
 const BigNum = core.types.BigNum;
-
-
 const RPC = new JsonRpc(env.GLS_CYBERWAY_HTTP_URL, { fetch });
 
 const API = new Api({
@@ -52,23 +50,12 @@ class Utils {
         return `${leftPart} ${sym}`;
     }
 
-    static checkDecsValue({ decs, requiredValue }) {
-        if (decs !== requiredValue) {
-            Logger.error(`convert: invalid argument ${decs}. decs must be equal ${requiredValue}`);
-            throw { code: 805, message: 'Wrong arguments' };
-        }
-    }
+    static parseAsset(quantity) {
+        const [amount, symbol] = quantity.split(' ');
 
-    static parseAsset(asset) {
-        if (!asset) {
-            throw new Error('Asset is not defined');
-        }
-        const [quantityRaw, sym] = asset.split(' ');
-        const quantity = new BigNum(asset);
         return {
-            quantityRaw,
-            quantity,
-            sym,
+            amount,
+            symbol,
         };
     }
 
@@ -90,15 +77,6 @@ class Utils {
             .div(divider)
             .dp(0)
             .toString();
-    }
-
-    static calculateQuantity(q1, q2) {
-        if (!q1) {
-            return q2;
-        }
-        const paresedQ1 = Utils.parseAsset(q1);
-        const paresedQ2 = Utils.parseAsset(q2);
-        return `${paresedQ1.quantity.plus(paresedQ2.quantity)} ${paresedQ2.sym}`;
     }
 }
 
