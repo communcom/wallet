@@ -4,24 +4,20 @@ const { verbose } = require('../../utils/logs');
 const PointModel = require('../../models/Point');
 
 class Point {
-    async handlePointCreateEvent(action) {
-        const { args } = action;
-        const { amount, symbol } = Utils.parseAsset(args.maximum_supply);
+    async handlePointCreateEvent({ args }) {
+        const { maximum_supply, cw, fee, issuer } = args;
 
-        const [_, decs] = amount.split('.');
+        const { symbol } = Utils.parseAsset(maximum_supply);
 
-        const newPointObject = {
+        await PointModel.create({
             symbol,
-            decs: decs.length, // FIXME bad way
-            issuer: args.issuer,
-            maximum_supply: args.maximum_supply,
-            cw: args.cw,
-            fee: args.fee,
-        };
+            issuer,
+            maximumSupply: maximum_supply,
+            cw,
+            fee,
+        });
 
-        await PointModel.create(newPointObject);
-
-        verbose('Created point', symbol, 'info:', newPointObject);
+        verbose('Created point', symbol);
     }
 
     async handleIssuePoint({ args }, { timestamp }) {
@@ -47,7 +43,34 @@ class Point {
         }
     }
 
-   
+    async handleRestock({ args }, { timestamp }) {
+        const match = args.memo.match(/^restock\: ([A-Z]+)$/);
+
+        if (!match) {
+            return;
+        }
+
+        const [_, symbol] = match;
+
+        const pointObject = await PointModel.findOne({ symbol });
+
+        if (pointObject) {
+            await PointModel.updateOne(
+                { symbol },
+                {
+                    $push: {
+                        restockHistory: {
+                            quantity: args.quantity,
+                            timestamp,
+                        },
+                    },
+                }
+            );
+
+            verbose('Updated', symbol);
+        }
+    }
+
     async handleSetInfo(action) {
         const { args } = action;
 

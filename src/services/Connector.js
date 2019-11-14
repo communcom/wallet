@@ -17,8 +17,7 @@ class Connector extends BasicConnector {
                     inherits: ['userSpecific'],
                     handler: this._wallet.getBalance,
                     scope: this._wallet,
-                    validation: {
-                    },
+                    validation: {},
                 },
                 getTransferHistory: {
                     inherits: ['userSpecific', 'pagination'],
@@ -50,8 +49,34 @@ class Connector extends BasicConnector {
                         },
                     },
                 },
+                getSellPrice: {
+                    handler: this._wallet.getSellPrice,
+                    scope: this._wallet,
+                    validation: {
+                        required: ['quantity'],
+                        properties: {
+                            quantity: {
+                                type: 'string',
+                            },
+                        },
+                    },
+                },
+                getBuyPrice: {
+                    handler: this._wallet.getBuyPrice,
+                    scope: this._wallet,
+                    validation: {
+                        required: ['pointSymbol', 'quantity'],
+                        properties: {
+                            pointSymbol: {
+                                type: 'string',
+                            },
+                            quantity: {
+                                type: 'string',
+                            },
+                        },
+                    },
+                },
             },
-
             serverDefaults: {
                 parents: {
                     pagination: {

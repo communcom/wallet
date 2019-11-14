@@ -8,9 +8,6 @@ module.exports = MongoDB.makeModel(
             type: String,
             required: true,
         },
-        decs: {
-            type: Number,
-        },
         supply: {
             type: String,
         },
@@ -21,7 +18,7 @@ module.exports = MongoDB.makeModel(
             type: String,
             required: true,
         },
-        maximum_supply: {
+        maximumSupply: {
             type: String,
             required: true,
         },
@@ -29,10 +26,16 @@ module.exports = MongoDB.makeModel(
             type: String,
         },
         cw: {
-            type: String,
+            type: Number,
         },
         fee: {
-            type: String,
+            type: Number,
+        },
+        transferFee: {
+            type: Number,
+        },
+        minTransferFeePoints: {
+            type: Number,
         },
         issueHistory: {
             type: [
@@ -51,10 +54,23 @@ module.exports = MongoDB.makeModel(
                 },
             ],
         },
+        restockHistory: {
+            type: [
+                {
+                    quantity: {
+                        type: String,
+                        required: true,
+                    },
+                    timestamp: {
+                        type: Date,
+                        required: true,
+                    },
+                },
+            ],
+        }
     },
     {
         index: [
-            // Default
             {
                 fields: {
                     symbol: 1,
