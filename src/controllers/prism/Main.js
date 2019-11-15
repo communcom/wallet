@@ -94,6 +94,7 @@ class Main {
         if (action.code === 'cyber.token' && action.receiver === 'c.point') {
             switch (action.action) {
                 case 'transfer':
+                    await this._point.handleRestock(action, trxData);
                     await this._transfer.handleBuyPoint(action, trxData);
                     break;
             }

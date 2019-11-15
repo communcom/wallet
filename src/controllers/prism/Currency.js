@@ -14,18 +14,29 @@ class Currency {
         const pointObject = await PointModel.findOne({ symbol });
 
         if (pointObject) {
-            const { supply, reserve, max_supply, cw, fee, issuert } = args;
+            const {
+                supply,
+                reserve,
+                max_supply,
+                cw,
+                fee,
+                issuer,
+                transfer_fee,
+                min_transfer_fee_points,
+            } = args;
 
             await PointModel.updateOne(
-                { _id: pointObject._id },
+                { symbol },
                 {
                     $set: {
                         supply,
                         reserve,
-                        max_supply,
+                        maximumSupply: max_supply,
                         cw,
                         fee,
-                        issuert,
+                        issuer,
+                        transferFee: transfer_fee,
+                        minTransferFeePoints: min_transfer_fee_points,
                     },
                 }
             );

@@ -6,6 +6,9 @@ const TransferModel = require('../models/Transfer');
 const PointModel = require('../models/Point');
 const Claim = require('../models/Claim');
 
+const Utils = require('../utils/Utils');
+const { calculateBuyAmount, calculateSellAmount } = require('../utils/price');
+
 class Wallet extends BasicController {
     constructor({ ...params }) {
         super(params);
@@ -151,8 +154,6 @@ class Wallet extends BasicController {
             for (const point of points) {
                 balancesMap.set(point.symbol, {
                     ...balancesMap.get(point.symbol),
-                    decs: point.decs,
-                    issuer: point.issuer,
                     logo: point.logo,
                 });
             }
@@ -161,6 +162,45 @@ class Wallet extends BasicController {
         }
 
         return result;
+    }
+
+    async getSellPrice({ quantity }) {
+        const { symbol } = Utils.parseAsset(quantity);
+
+        const point = await PointModel.findOne(
+            { symbol },
+            {
+                _id: false,
+                issueHistory: false,
+                restockHistory: false,
+            }
+        );
+
+        if (!point) {
+            return {};
+        }
+
+        const price = calculateSellAmount(point, quantity);
+
+        return { price: `${price} COMMUN` };
+    }
+    async getBuyPrice({ pointSymbol, quantity }) {
+        const point = await PointModel.findOne(
+            { symbol: pointSymbol },
+            {
+                _id: false,
+                issueHistory: false,
+                restockHistory: false,
+            }
+        );
+
+        if (!point) {
+            return {};
+        }
+
+        const price = calculateBuyAmount(point, quantity);
+
+        return { price: `${price} ${pointSymbol}` };
     }
 }
 

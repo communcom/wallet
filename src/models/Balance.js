@@ -30,7 +30,15 @@ module.exports = MongoDB.makeModel(
                     userId: 1,
                 },
                 options: {
-                    unique: true,
+                    background: true,
+                },
+            },
+            {
+                fields: {
+                    userId: 1,
+                    'balances.symbol': 1,
+                },
+                options: {
                     background: true,
                 },
             },
