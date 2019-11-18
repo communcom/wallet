@@ -61,7 +61,7 @@ class Transfer {
     async _handleTransfer({ trxData, sender, receiver, quantity, memo }) {
         const { symbol } = Utils.parseAsset(quantity);
 
-        if (symbol !== 'COMMUN') {
+        if (symbol !== 'CMN') {
             return;
         }
 

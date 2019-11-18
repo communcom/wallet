@@ -25,6 +25,9 @@ module.exports = MongoDB.makeModel(
         logo: {
             type: String,
         },
+        name: {
+            type: String,
+        },
         cw: {
             type: Number,
         },
@@ -67,7 +70,7 @@ module.exports = MongoDB.makeModel(
                     },
                 },
             ],
-        }
+        },
     },
     {
         index: [

@@ -122,6 +122,9 @@ class Main {
         }
         if (action.receiver === 'c.list' && action.code === 'c.list') {
             switch (action.action) {
+                case 'create':
+                    await this._point.handleCreateCommunity(action);
+                    break;
                 case 'setinfo':
                     await this._point.handleSetInfo(action);
                     break;
