@@ -155,6 +155,7 @@ class Wallet extends BasicController {
                 balancesMap.set(point.symbol, {
                     ...balancesMap.get(point.symbol),
                     logo: point.logo,
+                    name: point.name,
                 });
             }
 

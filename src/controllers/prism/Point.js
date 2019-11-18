@@ -74,6 +74,10 @@ class Point {
     async handleSetInfo(action) {
         const { args } = action;
 
+        if(!args.avatar_image) {
+            return;
+        }
+
         const pointObject = await PointModel.findOne({ symbol: args.commun_code });
 
         if (pointObject) {
@@ -87,6 +91,23 @@ class Point {
             );
 
             verbose('Updated point logo', args.commun_code);
+        }
+    }
+
+    async handleCreateCommunity(action) {
+        const { args } = action;
+        const pointObject = await PointModel.findOne({ symbol: args.commun_code });
+        
+        if (pointObject) {
+            await PointModel.updateOne(
+                { _id: pointObject._id },
+                {
+                    $set: {
+                        name: args.community_name,
+                    },
+                }
+            );
+            verbose('Updated point name', args.commun_code);
         }
     }
 }
