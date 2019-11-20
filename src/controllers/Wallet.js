@@ -127,6 +127,7 @@ class Wallet extends BasicController {
         return { items };
     }
 
+    // TODO improve
     async getBalance({ userId }) {
         const result = {
             userId,
@@ -138,24 +139,36 @@ class Wallet extends BasicController {
             const pointsSymbols = [];
             const balancesMap = new Map();
 
-            for (const { symbol, balance } of balanceObject.balances) {
+            for (const { symbol, balance, frozen } of balanceObject.balances) {
                 pointsSymbols.push({ symbol });
 
                 balancesMap.set(symbol, {
                     symbol,
                     balance,
+                    frozen,
                 });
             }
 
-            const points = await PointModel.find({
-                $or: pointsSymbols,
-            });
+            const points = await PointModel.find(
+                {
+                    $or: pointsSymbols,
+                },
+                {
+                    restockHistory: false,
+                    issueHistory: false,
+                }
+            );
 
             for (const point of points) {
+                const balanceObj = balancesMap.get(point.symbol);
+
                 balancesMap.set(point.symbol, {
-                    ...balancesMap.get(point.symbol),
+                    symbol: balanceObj.symbol,
+                    balance: balanceObj.balance,
                     logo: point.logo,
                     name: point.name,
+                    frozen: balanceObj.frozen,
+                    price: calculateSellAmount(point, balanceObj.balance),
                 });
             }
 

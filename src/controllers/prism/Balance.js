@@ -73,6 +73,62 @@ class Balance {
             verbose('Created balance:', userId, balance, symbol);
         }
     }
+
+    async handleInclstateEvent({ event, args }) {
+        if (event !== 'inclstate') {
+            return;
+        }
+
+        const { account, quantity } = args;
+        const { amount, symbol } = Utils.parseAsset(quantity);
+
+        const balanceModel = await BalanceModel.findOne({
+            userId: account,
+            'balances.symbol': symbol,
+        });
+
+        if (balanceModel) {
+            await BalanceModel.updateOne(
+                { userId: account, 'balances.symbol': symbol },
+                { $set: { 'balances.$.frozen': amount } }
+            );
+
+            verbose('Updated frozen points: ', account, quantity);
+        }
+    }
+
+    async handleGemChopEvent({ event, args }) {
+        if (event !== 'gemchop') {
+            return;
+        }
+
+        const { owner, unfrozen } = args;
+        const { amount, symbol } = Utils.parseAsset(unfrozen);
+
+        if (!parseFloat(amount)) {
+            return;
+        }
+
+        const balanceModel = await BalanceModel.findOne({
+            userId: owner,
+            'balances.symbol': symbol,
+        });
+
+        if (balanceModel) {
+            await BalanceModel.updateOne(
+                { userId: owner, 'balances.symbol': symbol },
+                {
+                    $set: {
+                        'balances.$.frozen': Utils.calculateFrozenQuantity(
+                            balanceModel.frozen,
+                            amount
+                        ),
+                    },
+                }
+            );
+            verbose('Updated unfrozen points: ', owner, amount);
+        }
+    }
 }
 
 module.exports = Balance;
