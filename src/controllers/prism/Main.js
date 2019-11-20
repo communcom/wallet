@@ -135,12 +135,15 @@ class Main {
             switch (event.code) {
                 case 'cyber.token':
                 case 'c.point':
-                    await this._balance.handleBalanceEvent(event, trxData);
+                    await this._balance.handleBalanceEvent(event);
                     await this._currency.handleCurrencyEvent(event);
                     break;
                 case 'c.gallery':
                     await this._gem.handleUserGemState(event);
                     await this._gem.handleUserGemChop(event);
+                    await this._balance.handleInclstateEvent(event);
+                    // handle unfrozen points
+                    await this._balance.handleGemChopEvent(event);
                     break;
                 default:
                     return;

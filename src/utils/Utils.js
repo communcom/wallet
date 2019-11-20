@@ -78,6 +78,16 @@ class Utils {
             .dp(0)
             .toString();
     }
+
+    static calculateFrozenQuantity(frozenAmount, unfrozenAmount) {
+        const result = new BigNum(frozenAmount).minus(new BigNum(unfrozenAmount)).toString();
+
+        if (result < 0) {
+            return 0;
+        }
+
+        return result;
+    }
 }
 
 module.exports = Utils;
