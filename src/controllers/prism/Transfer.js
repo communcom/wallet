@@ -34,6 +34,16 @@ class Transfer {
             meta.assetType = 'point';
         }
 
+        const match = memo.match(/^reward for ([0-9]+)$/);
+
+        if (match) {
+            const [_, tracery] = match;
+
+            meta.assetType = 'point';
+            meta.transferType = 'reward';
+            meta.tracery = tracery;
+        }
+
         await this._createTransfer({
             trxData,
             sender: from,

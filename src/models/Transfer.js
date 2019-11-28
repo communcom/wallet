@@ -42,7 +42,7 @@ module.exports = MongoDB.makeModel(
         meta: {
             transferType: {
                 type: String,
-                enum: ['transfer', 'convert'],
+                enum: ['transfer', 'convert', 'reward'],
             },
             assetType: {
                 type: String,
@@ -50,6 +50,10 @@ module.exports = MongoDB.makeModel(
             },
             exchangeAmount: {
                 type: Number,
+                default: undefined,
+            },
+            tracery: {
+                type: String,
                 default: undefined,
             },
         },
