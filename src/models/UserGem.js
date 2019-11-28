@@ -61,6 +61,10 @@ module.exports = MongoDB.makeModel(
                         type: String,
                         required: true,
                     },
+                    unfrozen: {
+                        type: String,
+                        required: true,
+                    },
                 },
             ],
         },

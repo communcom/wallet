@@ -1,3 +1,4 @@
+const Utils = require('../../utils/Utils');
 const { verbose } = require('../../utils/logs');
 
 const UserGem = require('../../models/UserGem');
@@ -9,6 +10,12 @@ class Gem {
         }
 
         const { tracery, owner, creator, points, pledge_points, damn, shares } = args;
+
+        const { amount } = Utils.parseAsset(points);
+
+        if (!parseFloat(amount)) {
+            return;
+        }
 
         const userGemModel = await UserGem.findOne({ userId: owner });
 
@@ -56,7 +63,13 @@ class Gem {
             return;
         }
 
-        const { tracery, owner, creator, reward } = args;
+        const { tracery, owner, creator, reward, unfrozen } = args;
+
+        const { amount } = Utils.parseAsset(reward);
+
+        if (!parseFloat(amount)) {
+            return;
+        }
 
         const userGemModel = await UserGem.findOne({ userId: owner });
 
@@ -70,6 +83,7 @@ class Gem {
                             owner,
                             creator,
                             reward,
+                            unfrozen,
                         },
                     },
                 }

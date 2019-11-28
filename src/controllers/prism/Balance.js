@@ -81,12 +81,16 @@ class Balance {
 
         const { account, quantity } = args;
         const { amount, symbol } = Utils.parseAsset(quantity);
-
+        
+        if (!parseFloat(amount)) {
+            return;
+        }
+        
         const balanceModel = await BalanceModel.findOne({
             userId: account,
             'balances.symbol': symbol,
         });
-
+        
         if (balanceModel) {
             await BalanceModel.updateOne(
                 { userId: account, 'balances.symbol': symbol },
@@ -115,14 +119,14 @@ class Balance {
         });
 
         if (balanceModel) {
+            const point = balanceModel.balances.find(b => b.symbol === symbol);
+            const frozenQuantity = Utils.calculateFrozenQuantity(point.frozen, amount);
+
             await BalanceModel.updateOne(
                 { userId: owner, 'balances.symbol': symbol },
                 {
                     $set: {
-                        'balances.$.frozen': Utils.calculateFrozenQuantity(
-                            balanceModel.frozen,
-                            amount
-                        ),
+                        'balances.$.frozen': frozenQuantity,
                     },
                 }
             );
