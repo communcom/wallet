@@ -85,16 +85,16 @@ class Balance {
 
         const { account, quantity } = args;
         const { amount, symbol } = Utils.parseAsset(quantity);
-        
+
         if (!parseFloat(amount)) {
             return;
         }
-        
+
         const balanceModel = await BalanceModel.findOne({
             userId: account,
             'balances.symbol': symbol,
         });
-        
+
         if (balanceModel) {
             await BalanceModel.updateOne(
                 { userId: account, 'balances.symbol': symbol },
