@@ -12,6 +12,10 @@ class Balance {
         const { account, balance } = event.args;
         const { amount, symbol } = Utils.parseAsset(balance);
 
+        if (symbol === 'GOLOS' || symbol === 'CYBER') {
+            return;
+        }
+
         await this._createOrUpdateUserBalance({
             userId: account,
             symbol,
