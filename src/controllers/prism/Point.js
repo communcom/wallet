@@ -74,7 +74,7 @@ class Point {
     async handleSetInfo(action) {
         const { args } = action;
 
-        if(!args.avatar_image) {
+        if (!args.avatar_image) {
             return;
         }
 
@@ -97,7 +97,7 @@ class Point {
     async handleCreateCommunity(action) {
         const { args } = action;
         const pointObject = await PointModel.findOne({ symbol: args.commun_code });
-        
+
         if (pointObject) {
             await PointModel.updateOne(
                 { _id: pointObject._id },

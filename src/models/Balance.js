@@ -21,7 +21,7 @@ module.exports = MongoDB.makeModel(
                     },
                     frozen: {
                         type: String,
-                    }
+                    },
                 },
             ],
         },
