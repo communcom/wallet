@@ -129,6 +129,17 @@ class Gem {
 
         const { amount, symbol } = Utils.parseAsset(points);
 
+        const userGemModel = await HistoryModel.findOne({
+            symbol,
+            sender: owner,
+            receiver: creator,
+            tracery,
+        });
+
+        if (userGemModel) {
+            return;
+        }
+
         await HistoryModel.create({
             trxId: trxData.trxId,
             timestamp: trxData.timestamp,
