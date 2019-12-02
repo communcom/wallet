@@ -114,6 +114,7 @@ class Gem {
                         owner,
                         creator,
                         reward,
+                        unfrozen,
                     },
                 ],
             });
