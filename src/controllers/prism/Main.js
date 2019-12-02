@@ -6,7 +6,7 @@ const Currency = require('./Currency');
 const Gem = require('./Gem');
 const Point = require('./Point');
 const Transfer = require('./Transfer');
-const Username = require('./Username');
+const UserMeta = require('./UserMeta');
 
 const REVERSIBLE_MODELS = [];
 
@@ -17,7 +17,7 @@ class Main {
         this._gem = new Gem();
         this._point = new Point();
         this._transfer = new Transfer();
-        this._username = new Username();
+        this._userMeta = new UserMeta();
     }
     async disperse({ id, blockNum, blockTime, transactions }) {
         for (const transaction of transactions) {
@@ -118,8 +118,17 @@ class Main {
         }
 
         if (action.action === 'newusername') {
-            await this._username.handleCreateUsernameAction(action);
+            await this._userMeta.handleCreateUsernameAction(action);
         }
+
+        if (action.receiver === 'c.social' && action.code === 'c.social') {
+            switch (action.action) {
+                case 'updatemeta':
+                    await this._userMeta.handleUpdateMetaAction(action);
+                    break;
+            }
+        }
+
         if (action.receiver === 'c.list' && action.code === 'c.list') {
             switch (action.action) {
                 case 'create':
@@ -139,8 +148,8 @@ class Main {
                     await this._currency.handleCurrencyEvent(event);
                     break;
                 case 'c.gallery':
-                    await this._gem.handleUserGemState(event);
-                    await this._gem.handleUserGemChop(event);
+                    await this._gem.handleUserGemState(event, trxData);
+                    await this._gem.handleUserGemChop(event, trxData);
                     await this._balance.handleInclstateEvent(event);
                     // handle unfrozen points
                     await this._balance.handleGemChopEvent(event);

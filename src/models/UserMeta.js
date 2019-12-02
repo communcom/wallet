@@ -12,6 +12,10 @@ module.exports = MongoDB.makeModel(
             type: String,
             default: null,
         },
+        avatarUrl: {
+            type: String,
+            default: null,
+        },
     },
     {
         index: [
