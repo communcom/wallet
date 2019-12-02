@@ -2,9 +2,10 @@ const Utils = require('../../utils/Utils');
 const { verbose } = require('../../utils/logs');
 
 const UserGem = require('../../models/UserGem');
+const HistoryModel = require('../../models/History');
 
 class Gem {
-    async handleUserGemState({ event, args }) {
+    async handleUserGemState({ event, args }, trxData) {
         if (event !== 'gemstate') {
             return;
         }
@@ -56,6 +57,20 @@ class Gem {
 
             verbose('Created user gemstate:', owner, tracery);
         }
+
+        this.handleHoldHistory(
+            trxData,
+            {
+                tracery,
+                owner,
+                creator,
+                points,
+            },
+            {
+                actionType: 'hold',
+                holdType: damn ? 'dislike' : 'like',
+            }
+        );
     }
 
     async handleUserGemChop({ event, args }) {
@@ -105,6 +120,27 @@ class Gem {
 
             verbose('Created user gemchop:', owner, tracery);
         }
+    }
+
+    async handleHoldHistory(trxData, gemObject, meta) {
+        const { tracery, owner, creator, points } = gemObject;
+        const { actionType, holdType } = meta;
+
+        const { amount, symbol } = Utils.parseAsset(points);
+
+        await HistoryModel.create({
+            trxId: trxData.trxId,
+            timestamp: trxData.timestamp,
+            sender: owner,
+            receiver: creator,
+            quantity: amount,
+            symbol,
+            actionType,
+            holdType,
+            tracery,
+        });
+
+        verbose('Created history transfer');
     }
 }
 

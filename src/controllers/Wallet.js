@@ -2,7 +2,7 @@ const core = require('cyberway-core-service');
 const BasicController = core.controllers.Basic;
 
 const BalanceModel = require('../models/Balance');
-const TransferModel = require('../models/Transfer');
+const HistoryModel = require('../models/History');
 const PointModel = require('../models/Point');
 const Claim = require('../models/Claim');
 
@@ -80,41 +80,77 @@ class Wallet extends BasicController {
                     as: 'receiverMeta',
                 },
             },
+            {
+                $lookup: {
+                    from: 'points',
+                    let: { symbol: '$symbol', memo: '$memo' },
+                    as: 'pointInfo',
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $or: [
+                                        { $eq: ['$symbol', '$$symbol'] },
+                                        { $eq: ['$symbol', '$$memo'] },
+                                    ],
+                                },
+                            },
+                        },
+                        { $project: { issueHistory: 0, restockHistory: 0 } },
+                    ],
+                },
+            },
         ];
 
-        const transfers = await TransferModel.aggregate(pipeline)
+        const transfers = await HistoryModel.aggregate(pipeline)
             .skip(offset)
             .limit(limit);
 
         const items = [];
 
         for (const transfer of transfers) {
-            const receiverName = {
+            const receiver = {
                 userId: transfer.receiver,
             };
-            const senderName = {
+            const sender = {
                 userId: transfer.sender,
             };
 
+            const point = {};
+
             if (transfer.receiverMeta[0]) {
-                receiverName.username = transfer.receiverMeta[0].username;
+                receiver.username = transfer.receiverMeta[0].username;
+                receiver.avatarUrl = transfer.receiverMeta[0].avatarUrl;
             }
 
             if (transfer.senderMeta[0]) {
-                senderName.username = transfer.senderMeta[0].username;
+                sender.username = transfer.senderMeta[0].username;
+                sender.avatarUrl = transfer.senderMeta[0].avatarUrl;
+            }
+
+            const [pointInfo] = transfer.pointInfo;
+
+            if (pointInfo) {
+                point.name = pointInfo.name;
+                point.logo = pointInfo.logo;
+                point.symbol = pointInfo.symbol;
             }
 
             const meta = {
-                ...transfer.meta,
+                actionType: transfer.actionType,
+                transferType: transfer.transferType,
+                holdType: transfer.holdType,
+                exchangeAmount: transfer.exchangeAmount,
                 direction: transfer.sender === userId ? 'send' : 'receive',
             };
 
             items.push({
                 id: transfer._id,
-                sender: senderName,
-                receiver: receiverName,
+                sender: sender,
+                receiver: receiver,
                 quantity: transfer.quantity,
-                symbol: transfer.sym,
+                symbol: transfer.symbol,
+                point,
                 trxId: transfer.trxId,
                 memo: transfer.memo,
                 blockNum: transfer.blockNum,

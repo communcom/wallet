@@ -2,7 +2,7 @@ const { verbose } = require('../../utils/logs');
 
 const UserMeta = require('../../models/UserMeta');
 
-class Username {
+class UserMetaInfo {
     async handleCreateUsernameAction(action) {
         const { creator, owner, name } = action.args;
 
@@ -25,6 +25,28 @@ class Username {
             verbose('Created meta data of user:', userId, username);
         }
     }
+
+    async handleUpdateMetaAction(action) {
+        const { account, meta } = action.args;
+
+        if (!meta.avatar_url) {
+            return;
+        }
+
+        const userId = account;
+
+        const userMetaModel = await UserMeta.findOne({ userId });
+
+        if (userMetaModel) {
+            await UserMeta.updateOne({ userId }, { avatarUrl: meta.avatar_url });
+
+            verbose('Changed meta data of user:', userId);
+        } else {
+            await UserMeta.create({ userId, avatarUrl: meta.avatar_url });
+
+            verbose('Created meta data of user:', userId);
+        }
+    }
 }
 
-module.exports = Username;
+module.exports = UserMetaInfo;

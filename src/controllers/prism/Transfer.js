@@ -3,12 +3,14 @@ const { verbose } = require('../../utils/logs');
 
 const TransferModel = require('../../models/Transfer');
 const Claim = require('../../models/Claim');
+const HistoryModel = require('../../models/History');
 
 class Transfer {
     async handleTokenTransfer(action, trxData) {
         const { from, to, quantity, memo } = action.args;
 
         await this._handleTransfer({
+            contractReceiver: action.receiver,
             trxData,
             sender: from,
             receiver: to,
@@ -21,8 +23,8 @@ class Transfer {
         const { from, to, quantity, memo } = action.args;
 
         const meta = {
-            transferType: 'transfer',
-            assetType: 'point',
+            actionType: 'transfer',
+            transferType: 'point',
         };
 
         const [balanceEvent] = action.events.filter(e => e.event === 'exchange');
@@ -30,8 +32,8 @@ class Transfer {
             const { amount } = Utils.parseAsset(balanceEvent.args.amount);
 
             meta.exchangeAmount = amount;
-            meta.transferType = 'convert';
-            meta.assetType = 'point';
+            meta.actionType = 'convert';
+            meta.transferType = 'point';
         }
 
         const match = memo.match(/^reward for ([0-9]+)$/);
@@ -39,12 +41,15 @@ class Transfer {
         if (match) {
             const [_, tracery] = match;
 
-            meta.assetType = 'point';
-            meta.transferType = 'reward';
+            meta.actionType = 'reward';
+            meta.rewardType = 'post';
             meta.tracery = tracery;
+
+            delete meta.transferType;
         }
 
         await this._createTransfer({
+            contractReceiver: action.receiver,
             trxData,
             sender: from,
             receiver: to,
@@ -59,6 +64,7 @@ class Transfer {
 
         for (const { to: receiver, quantity, memo } of action.args.recipients) {
             await this._handleTransfer({
+                contractReceiver: action.receiver,
                 trxData,
                 sender,
                 receiver,
@@ -68,7 +74,7 @@ class Transfer {
         }
     }
 
-    async _handleTransfer({ trxData, sender, receiver, quantity, memo }) {
+    async _handleTransfer({ contractReceiver, trxData, sender, receiver, quantity, memo }) {
         const { symbol } = Utils.parseAsset(quantity);
 
         if (symbol !== 'CMN') {
@@ -76,14 +82,15 @@ class Transfer {
         }
 
         await this._createTransfer({
+            contractReceiver,
             trxData,
             sender,
             receiver,
             quantity,
             memo,
             meta: {
-                transferType: 'transfer',
-                assetType: 'token',
+                actionType: 'transfer',
+                transferType: 'token',
             },
         });
     }
@@ -92,8 +99,8 @@ class Transfer {
         const { from, to, quantity, memo } = action.args;
 
         const meta = {
-            transferType: 'convert',
-            assetType: 'token',
+            actionType: 'convert',
+            transferType: 'token',
         };
 
         const [balanceEvent] = action.events.filter(e => e.event === 'exchange');
@@ -103,6 +110,7 @@ class Transfer {
         }
 
         await this._createTransfer({
+            contractReceiver: action.receiver,
             trxData,
             sender: from,
             receiver: to,
@@ -112,20 +120,21 @@ class Transfer {
         });
     }
 
-    async _createTransfer({ trxData, sender, receiver, quantity, memo, meta }) {
+    async _createTransfer({ contractReceiver, trxData, sender, receiver, quantity, memo, meta }) {
         const { amount, symbol } = Utils.parseAsset(quantity);
 
         const transferObject = {
+            contractReceiver,
             ...trxData,
             sender,
             receiver,
             quantity: amount,
             symbol,
             memo,
-            meta,
         };
 
         await TransferModel.create(transferObject);
+        await this.handleTransferHistory(transferObject, meta);
 
         verbose('Created transfer object:', transferObject);
     }
@@ -145,6 +154,48 @@ class Transfer {
         await claim.save();
 
         verbose('Created claim object: ', claim.toObject());
+    }
+
+    async handleTransferHistory(transferObject, meta) {
+        const {
+            trxId,
+            timestamp,
+            sender,
+            receiver,
+            quantity,
+            symbol,
+            memo,
+            tracery,
+        } = transferObject;
+        const { actionType, transferType, exchangeAmount } = meta;
+
+        if (
+            actionType === 'transfer' &&
+            (transferType === 'token' || transferType === 'point') &&
+            (receiver === 'c.point' || sender === 'c.point')
+        ) {
+            return;
+        }
+
+        if (actionType === 'convert' && transferType === 'token' && sender === 'c.point') {
+            return;
+        }
+
+        await HistoryModel.create({
+            trxId,
+            timestamp,
+            sender,
+            receiver,
+            quantity,
+            symbol,
+            memo,
+            actionType,
+            transferType,
+            exchangeAmount,
+            tracery,
+        });
+
+        verbose('Created history transfer');
     }
 }
 
