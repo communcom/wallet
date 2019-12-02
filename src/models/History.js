@@ -108,6 +108,17 @@ module.exports = MongoDB.makeModel(
                     background: true,
                 },
             },
+            {
+                fields: {
+                    symbol: 1,
+                    sender: 1,
+                    receiver: 1,
+                    tracery: 1,
+                },
+                options: {
+                    background: true,
+                },
+            },
         ],
     }
 );
