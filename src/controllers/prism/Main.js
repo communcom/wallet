@@ -86,7 +86,8 @@ class Main {
                     await this._transfer.handleBulkTransfer(action, trxData);
                     break;
                 case 'claim':
-                    await this._transfer.handleClaim(action, trxData);
+                    // disabled
+                    // await this._transfer.handleClaim(action, trxData);
                     break;
             }
         }
