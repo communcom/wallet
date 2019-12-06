@@ -49,15 +49,52 @@ class Wallet extends BasicController {
         };
     }
 
-    async getTransferHistory({ userId, offset, limit }) {
-        const filter = {
-            $or: [{ sender: userId }, { receiver: userId }],
-            sender: { $ne: 'comn.point' },
+    async getTransferHistory({ userId, direction, symbol, transferAction, offset, limit }) {
+        const directionFilter = [];
+        const symbolFilter = {};
+        const transferActionFilter = {};
+
+        if (symbol !== 'all') {
+            if (symbol === 'CMN') {
+                transferActionFilter.$or = [
+                    { $and: [{ actionType: 'transfer' }, { transferType: 'token' }] },
+                    { $and: [{ actionType: 'convert' }, { transferType: 'point' }] },
+                ];
+            } else {
+                symbolFilter.$or = [{ symbol }, { memo: symbol }];
+            }
+        }
+
+        switch (direction) {
+            case 'receive':
+                directionFilter.push({ receiver: userId });
+                break;
+            case 'send':
+                directionFilter.push({ sender: userId });
+                break;
+            case 'all':
+            default:
+                directionFilter.push({ sender: userId }, { receiver: userId });
+        }
+
+        switch (transferAction) {
+            case 'transfer':
+                transferActionFilter.actionType = 'transfer';
+                break;
+            case 'convert':
+                transferActionFilter.actionType = 'convert';
+                break;
+            case 'all':
+            default:
+        }
+
+        const filterQuery = {
+            $and: [{ $or: directionFilter }, symbolFilter, transferActionFilter],
         };
 
         const pipeline = [
             {
-                $match: filter,
+                $match: filterQuery,
             },
             {
                 $sort: {
@@ -232,8 +269,9 @@ class Wallet extends BasicController {
 
         const price = calculateSellAmount(point, quantity);
 
-        return { price: `${price} COMMUN` };
+        return { price: `${price} CMN` };
     }
+
     async getBuyPrice({ pointSymbol, quantity }) {
         const point = await PointModel.findOne(
             { symbol: pointSymbol },
@@ -251,6 +289,26 @@ class Wallet extends BasicController {
         const price = calculateBuyAmount(point, quantity);
 
         return { price: `${price} ${pointSymbol}` };
+    }
+
+    async getPointInfo({ symbol }) {
+        const point = await PointModel.findOne(
+            { symbol },
+            {
+                _id: false,
+                issueHistory: false,
+                restockHistory: false,
+                createdAt: false,
+                updatedAt: false,
+                __v: false,
+            }
+        );
+
+        if (!point) {
+            return {};
+        }
+
+        return point;
     }
 }
 

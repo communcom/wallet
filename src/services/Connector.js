@@ -24,10 +24,20 @@ class Connector extends BasicConnector {
                     handler: this._wallet.getTransferHistory,
                     scope: this._wallet,
                     validation: {
+                        required: ['direction', 'symbol', 'transferType'],
                         properties: {
                             direction: {
                                 type: 'string',
-                                enum: ['in', 'out', 'all'],
+                                enum: ['all', 'send', 'receive'],
+                                default: 'all',
+                            },
+                            symbol: {
+                                type: 'string',
+                                default: 'all',
+                            },
+                            transferType: {
+                                type: 'string',
+                                enum: ['all', 'transfer', 'convert'],
                                 default: 'all',
                             },
                         },
@@ -71,6 +81,18 @@ class Connector extends BasicConnector {
                                 type: 'string',
                             },
                             quantity: {
+                                type: 'string',
+                            },
+                        },
+                    },
+                },
+                getPointInfo: {
+                    handler: this._wallet.getPointInfo,
+                    scope: this._wallet,
+                    validation: {
+                        required: ['symbol'],
+                        properties: {
+                            symbol: {
                                 type: 'string',
                             },
                         },
