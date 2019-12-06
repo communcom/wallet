@@ -13,6 +13,10 @@ class UserMetaInfo {
         const userId = owner;
         const username = name;
 
+        if(!username) {
+            return;
+        }
+
         const userMetaModel = await UserMeta.findOne({ userId });
 
         if (userMetaModel) {
