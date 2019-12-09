@@ -13,7 +13,7 @@ class UserMetaInfo {
         const userId = owner;
         const username = name;
 
-        if(!username) {
+        if (!username) {
             return;
         }
 
@@ -45,10 +45,6 @@ class UserMetaInfo {
             await UserMeta.updateOne({ userId }, { avatarUrl: meta.avatar_url });
 
             verbose('Changed meta data of user:', userId);
-        } else {
-            await UserMeta.create({ userId, avatarUrl: meta.avatar_url });
-
-            verbose('Created meta data of user:', userId);
         }
     }
 }

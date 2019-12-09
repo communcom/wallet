@@ -35,7 +35,7 @@ class Prism extends BasicService {
                 try {
                     await this._mainPrismController.disperse(data);
                 } catch (error) {
-                    Logger.error('Cant disperse block:', error);
+                    Logger.error('Cant disperse block: ', data.blockNum, error);
                     process.exit(1);
                 }
                 break;
