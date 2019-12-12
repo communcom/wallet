@@ -37,7 +37,12 @@ class Connector extends BasicConnector {
                             },
                             transferType: {
                                 type: 'string',
-                                enum: ['all', 'transfer', 'convert'],
+                                enum: ['all', 'transfer', 'convert', 'none'],
+                                default: 'all',
+                            },
+                            rewards: {
+                                type: 'string',
+                                enum: ['all', 'none'],
                                 default: 'all',
                             },
                         },

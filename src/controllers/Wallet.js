@@ -49,14 +49,15 @@ class Wallet extends BasicController {
         };
     }
 
-    async getTransferHistory({ userId, direction, symbol, transferAction, offset, limit }) {
+    async getTransferHistory({ userId, direction, symbol, transferType, rewards, offset, limit }) {
         const directionFilter = [];
         const symbolFilter = {};
-        const transferActionFilter = {};
+        const transferTypeFilter = {};
+        const rewardsFilter = {};
 
         if (symbol !== 'all') {
             if (symbol === 'CMN') {
-                transferActionFilter.$or = [
+                transferTypeFilter.$or = [
                     { $and: [{ actionType: 'transfer' }, { transferType: 'token' }] },
                     { $and: [{ actionType: 'convert' }, { transferType: 'point' }] },
                 ];
@@ -77,19 +78,35 @@ class Wallet extends BasicController {
                 directionFilter.push({ sender: userId }, { receiver: userId });
         }
 
-        switch (transferAction) {
+        switch (transferType) {
             case 'transfer':
-                transferActionFilter.actionType = 'transfer';
+                transferTypeFilter.$and = [{ $or: [{ actionType: 'transfer' }] }];
                 break;
             case 'convert':
-                transferActionFilter.actionType = 'convert';
+                transferTypeFilter.$and = [{ $or: [{ actionType: 'convert' }] }];
+                break;
+            case 'none':
+                transferTypeFilter.$nor = [
+                    { $or: [{ actionType: 'transfer' }, { actionType: 'convert' }] },
+                ];
                 break;
             case 'all':
             default:
         }
 
+        if (!['all', 'none'].includes(transferType) && rewards === 'all') {
+            transferTypeFilter.$and[0].$or.push({ actionType: 'reward' });
+        }
+
+        switch (rewards) {
+            case 'none':
+                rewardsFilter.actionType = { $not: { $eq: 'reward' } };
+            case 'all':
+            default:
+        }
+
         const filterQuery = {
-            $and: [{ $or: directionFilter }, symbolFilter, transferActionFilter],
+            $and: [{ $or: directionFilter }, symbolFilter, transferTypeFilter, rewardsFilter],
         };
 
         const pipeline = [
