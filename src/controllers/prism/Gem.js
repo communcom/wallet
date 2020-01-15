@@ -64,16 +64,17 @@ class Gem {
                 tracery,
                 owner,
                 creator,
-                points,
+                asset: points,
             },
             {
                 actionType: 'hold',
                 holdType: damn ? 'dislike' : 'like',
+                frozen: amount,
             }
         );
     }
 
-    async handleUserGemChop({ event, args }) {
+    async handleUserGemChop({ event, args }, trxData) {
         if (event !== 'gemchop') {
             return;
         }
@@ -121,22 +122,42 @@ class Gem {
 
             verbose('Created user gemchop:', owner, tracery);
         }
+
+        const { amount: unfrozenAmount } = Utils.parseAsset(unfrozen);
+
+        if (!parseFloat(unfrozenAmount)) {
+            return;
+        }
+
+        this.handleHoldHistory(
+            trxData,
+            {
+                tracery,
+                owner,
+                creator,
+                asset: unfrozen,
+            },
+            {
+                actionType: 'unhold',
+                unfrozen: unfrozenAmount,
+            }
+        );
     }
 
     async handleHoldHistory(trxData, gemObject, meta) {
-        const { tracery, owner, creator, points } = gemObject;
-        const { actionType, holdType } = meta;
+        const { tracery, owner, creator, asset } = gemObject;
+        const { actionType, holdType, frozen, unfrozen } = meta;
 
-        const { amount, symbol } = Utils.parseAsset(points);
+        const { amount, symbol } = Utils.parseAsset(asset);
 
-        const userGemModel = await HistoryModel.findOne({
+        const userHistoryModel = await HistoryModel.findOne({
             symbol,
             sender: owner,
             receiver: creator,
             tracery,
         });
 
-        if (userGemModel) {
+        if (actionType === 'hold' && userHistoryModel) {
             return;
         }
 
@@ -148,8 +169,10 @@ class Gem {
             quantity: amount,
             symbol,
             actionType,
-            holdType,
+            holdType: actionType === 'unhold' ? userHistoryModel.holdType : holdType,
             tracery,
+            frozen,
+            unfrozen,
         });
 
         verbose('Created history transfer');

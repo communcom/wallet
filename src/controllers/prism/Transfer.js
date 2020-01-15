@@ -36,15 +36,23 @@ class Transfer {
             meta.transferType = 'point';
         }
 
-        const match = memo.match(/^reward for ([0-9]+)$/);
+        const rewardMatch = memo.match(/^reward for ([0-9]+)$/);
 
-        if (match) {
-            const [_, tracery] = match;
+        if (rewardMatch) {
+            const [_, tracery] = rewardMatch;
 
             meta.actionType = 'reward';
             meta.rewardType = 'post';
             meta.tracery = tracery;
 
+            delete meta.transferType;
+        }
+
+        const claimMatch = memo.match(/^claimed points/);
+
+        if (claimMatch) {
+            meta.actionType = 'claim';
+            
             delete meta.transferType;
         }
 
