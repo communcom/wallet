@@ -89,6 +89,9 @@ class Main {
                     // disabled
                     // await this._transfer.handleClaim(action, trxData);
                     break;
+                case 'open':
+                    await this._balance.handleOpenCommunBalance(action);
+                    break;
             }
         }
 
