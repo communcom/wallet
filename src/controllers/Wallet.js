@@ -259,6 +259,7 @@ class Wallet extends BasicController {
                     name: point.name,
                     frozen: balanceObj.frozen,
                     price: calculateSellAmount(point, balanceObj.balance),
+                    transferFee: point.transferFee,
                 });
             }
 

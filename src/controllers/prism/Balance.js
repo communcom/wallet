@@ -35,6 +35,20 @@ class Balance {
         });
     }
 
+    async handleOpenCommunBalance({ args }) {
+        const [_, symbol] = args.symbol.split(',');
+
+        if (symbol !== 'CMN') {
+            return;
+        }
+
+        await this._createOrUpdateUserBalance({
+            userId: args.owner,
+            symbol,
+            balance: 0,
+        });
+    }
+
     async _createOrUpdateUserBalance({ userId, balance, symbol }) {
         const balanceModel = await BalanceModel.findOne({ userId });
 
