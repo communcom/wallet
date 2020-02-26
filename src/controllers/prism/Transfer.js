@@ -52,7 +52,7 @@ class Transfer {
 
         if (claimMatch) {
             meta.actionType = 'claim';
-            
+
             delete meta.transferType;
         }
 

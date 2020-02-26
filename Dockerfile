@@ -1,4 +1,4 @@
-FROM node:10-alpine as builder
+FROM node:12-alpine as builder
 
 WORKDIR /app
 
@@ -6,7 +6,7 @@ COPY package.json package-lock.json ./
 
 RUN npm install --only=production
 
-FROM node:10-alpine
+FROM node:12-alpine
 
 ENV NODE_ENV=production
 WORKDIR /app
