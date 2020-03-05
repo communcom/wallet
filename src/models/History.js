@@ -47,7 +47,7 @@ module.exports = MongoDB.makeModel(
         },
         actionType: {
             type: String,
-            enum: ['transfer', 'convert', 'reward', 'hold', 'claim', 'unhold'],
+            enum: ['transfer', 'convert', 'reward', 'hold', 'claim', 'unhold', 'burn'],
         },
         transferType: {
             type: String,
