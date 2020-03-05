@@ -175,7 +175,8 @@ class Transfer {
             memo,
             tracery,
         } = transferObject;
-        const { actionType, transferType, exchangeAmount } = meta;
+        const { transferType, exchangeAmount } = meta;
+        let { actionType } = meta;
 
         if (
             actionType === 'transfer' &&
@@ -187,6 +188,10 @@ class Transfer {
 
         if (actionType === 'convert' && transferType === 'token' && sender === 'c.point') {
             return;
+        }
+
+        if (receiver === 'cyber.null') {
+            actionType = 'burn';
         }
 
         await HistoryModel.create({
