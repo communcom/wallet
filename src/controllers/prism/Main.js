@@ -118,6 +118,9 @@ class Main {
                 case 'transfer':
                     await this._transfer.handlePointTransfer(action, trxData);
                     break;
+                case 'setparams':
+                    await this._point.handlePointSetParams(action);
+                    break;
             }
         }
 
@@ -139,7 +142,7 @@ class Main {
                     await this._point.handleCreateCommunity(action);
                     break;
                 case 'setinfo':
-                    await this._point.handleSetInfo(action);
+                    await this._point.handleCommunitySetInfo(action);
                     break;
             }
         }
