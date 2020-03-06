@@ -45,9 +45,17 @@ module.exports = MongoDB.makeModel(
             type: Number,
             default: undefined,
         },
+        feePercent: {
+            type: Number,
+            default: undefined,
+        },
+        feeAmount: {
+            type: Number,
+            default: undefined,
+        },
         actionType: {
             type: String,
-            enum: ['transfer', 'convert', 'reward', 'hold', 'claim', 'unhold'],
+            enum: ['transfer', 'convert', 'reward', 'hold', 'claim', 'unhold', 'burn'],
         },
         transferType: {
             type: String,

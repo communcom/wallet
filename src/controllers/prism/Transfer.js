@@ -27,13 +27,31 @@ class Transfer {
             transferType: 'point',
         };
 
-        const [balanceEvent] = action.events.filter(e => e.event === 'exchange');
-        if (balanceEvent) {
-            const { amount } = Utils.parseAsset(balanceEvent.args.amount);
+        let balanceEvent, feeEvent, currencyEvent;
 
-            meta.exchangeAmount = amount;
+        for (const event of action.events) {
+            switch (event.event) {
+                case 'exchange':
+                    balanceEvent = event;
+                    break;
+                case 'fee':
+                    feeEvent = event;
+                    break;
+                case 'currency':
+                    currencyEvent = event;
+                    break;
+            }
+        }
+
+        if (balanceEvent) {
+            const { amount: exchangeAmount } = Utils.parseAsset(balanceEvent.args.amount);
+            const { amount: feeAmount } = Utils.parseAsset(feeEvent.args.amount);
+
+            meta.exchangeAmount = exchangeAmount;
             meta.actionType = 'convert';
             meta.transferType = 'point';
+            meta.feePercent = currencyEvent.args.fee / 100;
+            meta.feeAmount = feeAmount;
         }
 
         const rewardMatch = memo.match(/^reward for ([0-9]+)$/);
@@ -175,7 +193,8 @@ class Transfer {
             memo,
             tracery,
         } = transferObject;
-        const { actionType, transferType, exchangeAmount } = meta;
+        const { transferType, exchangeAmount, feePercent, feeAmount } = meta;
+        let { actionType } = meta;
 
         if (
             actionType === 'transfer' &&
@@ -187,6 +206,10 @@ class Transfer {
 
         if (actionType === 'convert' && transferType === 'token' && sender === 'c.point') {
             return;
+        }
+
+        if (receiver === 'cyber.null') {
+            actionType = 'burn';
         }
 
         await HistoryModel.create({
@@ -201,6 +224,8 @@ class Transfer {
             transferType,
             exchangeAmount,
             tracery,
+            feePercent,
+            feeAmount,
         });
 
         verbose('Created history transfer');
