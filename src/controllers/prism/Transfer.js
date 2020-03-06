@@ -27,7 +27,6 @@ class Transfer {
             transferType: 'point',
         };
 
-        // const [balanceEvent] = action.events.filter(e => e.event === 'exchange');
         let balanceEvent, feeEvent, currencyEvent;
 
         for (const event of action.events) {
