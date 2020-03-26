@@ -12,4 +12,5 @@ module.exports = {
     GLS_VERBOSE_LOGS: Boolean(env.GLS_VERBOSE_LOGS) && env.GLS_VERBOSE_LOGS !== 'false',
     GLS_ENABLE_READ_MODE: env.GLS_ENABLE_READ_MODE === 'true',
     GLS_ENABLE_WRITE_MODE: env.GLS_ENABLE_WRITE_MODE === 'true',
+    GLS_BOUNTY_ACCOUNT: env.GLS_BOUNTY_ACCOUNT || 'c.bounty',
 };

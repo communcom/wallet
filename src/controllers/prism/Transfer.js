@@ -1,6 +1,7 @@
 const Utils = require('../../utils/Utils');
 const { verbose } = require('../../utils/logs');
 
+const env = require('../../data/env');
 const TransferModel = require('../../models/Transfer');
 const Claim = require('../../models/Claim');
 const HistoryModel = require('../../models/History');
@@ -74,9 +75,7 @@ class Transfer {
             delete meta.transferType;
         }
 
-        if (memo) {
-            this._processReferral(memo, meta);
-        }
+        this._processReferral({ from, memo }, meta);
 
         await this._createTransfer({
             contractReceiver: action.receiver,
@@ -89,7 +88,11 @@ class Transfer {
         });
     }
 
-    _processReferral(memo, meta) {
+    _processReferral({ from, memo }, meta) {
+        if (!env.GLS_BOUNTY_ACCOUNT || env.GLS_BOUNTY_ACCOUNT !== from) {
+            return;
+        }
+
         const referralRegistrationMatch = memo.match(
             /^referral registration bonus from: [\w\d.-]+ \(([\w0-5]+)\)$/
         );
