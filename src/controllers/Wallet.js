@@ -119,6 +119,12 @@ class Wallet extends BasicController {
                 },
             },
             {
+                $skip: offset,
+            },
+            {
+                $limit: limit,
+            },
+            {
                 $lookup: {
                     from: 'usermetas',
                     localField: 'sender',
@@ -132,6 +138,14 @@ class Wallet extends BasicController {
                     localField: 'receiver',
                     foreignField: 'userId',
                     as: 'receiverMeta',
+                },
+            },
+            {
+                $lookup: {
+                    from: 'usermetas',
+                    localField: 'referralInitiator',
+                    foreignField: 'userId',
+                    as: 'referralInitiatorMeta',
                 },
             },
             {
@@ -156,9 +170,7 @@ class Wallet extends BasicController {
             },
         ];
 
-        const transfers = await HistoryModel.aggregate(pipeline)
-            .skip(offset)
-            .limit(limit);
+        const transfers = await HistoryModel.aggregate(pipeline);
 
         const items = [];
 
@@ -169,17 +181,28 @@ class Wallet extends BasicController {
             const sender = {
                 userId: transfer.sender,
             };
+            const referral = {
+                userId: transfer.referralInitiator,
+            };
 
             const point = {};
 
-            if (transfer.receiverMeta[0]) {
-                receiver.username = transfer.receiverMeta[0].username;
-                receiver.avatarUrl = transfer.receiverMeta[0].avatarUrl;
+            const receiverMeta = transfer.receiverMeta[0];
+            if (receiverMeta) {
+                receiver.username = receiverMeta.username;
+                receiver.avatarUrl = receiverMeta.avatarUrl;
             }
 
-            if (transfer.senderMeta[0]) {
-                sender.username = transfer.senderMeta[0].username;
-                sender.avatarUrl = transfer.senderMeta[0].avatarUrl;
+            const senderMeta = transfer.senderMeta[0];
+            if (senderMeta) {
+                sender.username = senderMeta.username;
+                sender.avatarUrl = senderMeta.avatarUrl;
+            }
+
+            const referralMeta = transfer.referralInitiatorMeta[0];
+            if (referralMeta) {
+                referral.username = referralMeta.username;
+                referral.avatarUrl = referralMeta.avatarUrl;
             }
 
             const [pointInfo] = transfer.pointInfo;
@@ -202,6 +225,7 @@ class Wallet extends BasicController {
                 id: transfer._id,
                 sender: sender,
                 receiver: receiver,
+                referral: referral.userId ? referral : undefined,
                 quantity: transfer.quantity,
                 symbol: transfer.symbol,
                 point,
