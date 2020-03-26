@@ -108,7 +108,7 @@ class Transfer {
         );
 
         if (referralPurchaseMatch) {
-            meta.eventType = 'referralPurchaseBonus';
+            meta.actionType = 'referralPurchaseBonus';
             meta.referralInitiator = referralPurchaseMatch[2];
             meta.referralData = {
                 percent: Number(referralPurchaseMatch[1]),
