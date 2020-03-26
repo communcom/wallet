@@ -75,8 +75,6 @@ class Transfer {
             delete meta.transferType;
         }
 
-        this._processReferral({ from, memo }, meta);
-
         await this._createTransfer({
             contractReceiver: action.receiver,
             trxData,
@@ -138,6 +136,13 @@ class Transfer {
             return;
         }
 
+        const meta = {
+            actionType: 'transfer',
+            transferType: 'token',
+        };
+
+        this._processReferral({ from: sender, memo }, meta);
+
         await this._createTransfer({
             contractReceiver,
             trxData,
@@ -145,10 +150,7 @@ class Transfer {
             receiver,
             quantity,
             memo,
-            meta: {
-                actionType: 'transfer',
-                transferType: 'token',
-            },
+            meta,
         });
     }
 
