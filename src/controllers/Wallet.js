@@ -232,6 +232,7 @@ class Wallet extends BasicController {
                 holdType: transfer.holdType,
                 exchangeAmount: transfer.exchangeAmount,
                 direction: transfer.sender === userId ? 'send' : 'receive',
+                ...transfer.referralData,
             };
 
             items.push({
