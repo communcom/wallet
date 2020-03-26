@@ -58,7 +58,20 @@ class Wallet extends BasicController {
         if (symbol !== 'all') {
             if (symbol === 'CMN') {
                 transferTypeFilter.$or = [
-                    { $and: [{ actionType: 'transfer' }, { transferType: 'token' }] },
+                    {
+                        $and: [
+                            {
+                                actionType: {
+                                    $in: [
+                                        'transfer',
+                                        'referralRegisterBonus',
+                                        'referralPurchaseBonus',
+                                    ],
+                                },
+                            },
+                            { transferType: 'token' },
+                        ],
+                    },
                     { $and: [{ actionType: 'convert' }, { transferType: 'point' }] },
                 ];
             } else {
