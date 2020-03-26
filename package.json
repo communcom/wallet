@@ -11,7 +11,7 @@
   "author": "commun",
   "dependencies": {
     "base58check": "^2.0.0",
-    "cyberway-core-service": "^3.55.6",
+    "cyberway-core-service": "^3.59.2",
     "cyberwayjs": "^20.0.0-beta7",
     "dotenv": "^8.1.0",
     "eosjs-ecc": "^4.0.4",
