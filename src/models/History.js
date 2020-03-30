@@ -55,7 +55,17 @@ module.exports = MongoDB.makeModel(
         },
         actionType: {
             type: String,
-            enum: ['transfer', 'convert', 'reward', 'hold', 'claim', 'unhold', 'burn'],
+            enum: [
+                'transfer',
+                'convert',
+                'reward',
+                'hold',
+                'claim',
+                'unhold',
+                'burn',
+                'referralRegisterBonus',
+                'referralPurchaseBonus',
+            ],
         },
         transferType: {
             type: String,
@@ -68,6 +78,12 @@ module.exports = MongoDB.makeModel(
         holdType: {
             type: String,
             enum: ['like', 'dislike'],
+        },
+        referralInitiator: {
+            type: String,
+        },
+        referralData: {
+            type: Object,
         },
     },
     {

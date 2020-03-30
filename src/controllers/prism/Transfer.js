@@ -1,6 +1,7 @@
 const Utils = require('../../utils/Utils');
 const { verbose } = require('../../utils/logs');
 
+const env = require('../../data/env');
 const TransferModel = require('../../models/Transfer');
 const Claim = require('../../models/Claim');
 const HistoryModel = require('../../models/History');
@@ -85,6 +86,34 @@ class Transfer {
         });
     }
 
+    _processReferral({ from, memo }, meta) {
+        if (!env.GLS_BOUNTY_ACCOUNT || env.GLS_BOUNTY_ACCOUNT !== from) {
+            return;
+        }
+
+        const referralRegistrationMatch = memo.match(
+            /^referral registration bonus from: [\w\d.-]+ \(([\w0-5]+)\)$/
+        );
+
+        if (referralRegistrationMatch) {
+            meta.actionType = 'referralRegisterBonus';
+            meta.referralInitiator = referralRegistrationMatch[1];
+            return;
+        }
+
+        const referralPurchaseMatch = memo.match(
+            /^referral purchase bonus \((\d+)%\) from: [\w\d.-]+ \(([\w0-5]+)\)$/
+        );
+
+        if (referralPurchaseMatch) {
+            meta.actionType = 'referralPurchaseBonus';
+            meta.referralInitiator = referralPurchaseMatch[2];
+            meta.referralData = {
+                percent: Number(referralPurchaseMatch[1]),
+            };
+        }
+    }
+
     async handleBulkTransfer(action, trxData) {
         const sender = action.args.from;
 
@@ -107,6 +136,13 @@ class Transfer {
             return;
         }
 
+        const meta = {
+            actionType: 'transfer',
+            transferType: 'token',
+        };
+
+        this._processReferral({ from: sender, memo }, meta);
+
         await this._createTransfer({
             contractReceiver,
             trxData,
@@ -114,10 +150,7 @@ class Transfer {
             receiver,
             quantity,
             memo,
-            meta: {
-                actionType: 'transfer',
-                transferType: 'token',
-            },
+            meta,
         });
     }
 
@@ -193,7 +226,14 @@ class Transfer {
             memo,
             tracery,
         } = transferObject;
-        const { transferType, exchangeAmount, feePercent, feeAmount } = meta;
+        const {
+            transferType,
+            exchangeAmount,
+            feePercent,
+            feeAmount,
+            referralInitiator,
+            referralData,
+        } = meta;
         let { actionType } = meta;
 
         if (
@@ -226,6 +266,8 @@ class Transfer {
             tracery,
             feePercent,
             feeAmount,
+            referralInitiator,
+            referralData,
         });
 
         verbose('Created history transfer');
