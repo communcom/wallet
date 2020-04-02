@@ -5,6 +5,8 @@ const Logger = core.utils.Logger;
 
 const MainPrismController = require('../controllers/prism/Main');
 
+const BlockSubscribeStatusModel = require('../models/BlockSubscribeStatus');
+
 class Prism extends BasicService {
     constructor() {
         super();
@@ -13,6 +15,9 @@ class Prism extends BasicService {
     }
 
     async start() {
+        this._recentTransactions = new Set();
+        this._currentBlockNum = 0;
+
         const subscriber = new BlockSubscribe({
             handler: this._handleBlock.bind(this),
         });
@@ -25,9 +30,24 @@ class Prism extends BasicService {
         }
     }
 
+    getCurrentBlockNum() {
+        return this._currentBlockNum;
+    }
+
+    hasRecentTransaction(id) {
+        return this._recentTransactions.has(id);
+    }
+
     async _handleBlock({ type, data }) {
+        const status = {
+            blockNum: data.blockNum,
+            blockId: data.id,
+            blockTime: data.blockTime,
+        };
+
         switch (type) {
             case 'IRREVERSIBLE_BLOCK':
+                status.lastIrreversible = data.blockNum;
                 await this._mainPrismController.registerLIB(data.blockNum);
                 break;
 
@@ -41,8 +61,34 @@ class Prism extends BasicService {
                 break;
 
             case 'FORK':
+                status.lastFork = data.baseBlockNum;
                 Logger.info('STARTING FORK ON BLOCK', data.baseBlockNum);
                 await this._mainPrismController.handleFork(data.baseBlockNum);
+        }
+
+        this._emitHandled(data);
+
+        await BlockSubscribeStatusModel.updateOne({}, status, { upsert: true });
+    }
+
+    _emitHandled(block) {
+        const blockNum = block.blockNum;
+
+        this._currentBlockNum = blockNum;
+
+        this.emit('blockDone', blockNum);
+
+        for (const transaction of block.transactions) {
+            if (!transaction || !transaction.actions) {
+                Logger.warn(`Empty transaction - ${blockNum}`);
+                return;
+            }
+
+            const id = transaction.id;
+
+            this.emit('transactionDone', id);
+
+            this._recentTransactions.add(id);
         }
     }
 }

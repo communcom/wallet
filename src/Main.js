@@ -10,8 +10,8 @@ class Main extends BasicMain {
     constructor() {
         super(env);
 
-        const connector = new Connector();
         const prism = new Prism();
+        const connector = new Connector({ prism });
 
         this.startMongoBeforeBoot(null, {
             poolSize: 500,

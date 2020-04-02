@@ -1,10 +1,14 @@
 const core = require('cyberway-core-service');
 const BasicController = core.controllers.Basic;
 
+const packageJson = require('../../package.json');
+
+const BlockSubscribeModel = require('../models/BlockSubscribeStatus');
 const BalanceModel = require('../models/Balance');
 const HistoryModel = require('../models/History');
 const PointModel = require('../models/Point');
 const Claim = require('../models/Claim');
+const Transfer = require('../models/Transfer');
 
 const Utils = require('../utils/Utils');
 const { calculateBuyAmount, calculateSellAmount } = require('../utils/price');
@@ -365,6 +369,48 @@ class Wallet extends BasicController {
         }
 
         return point;
+    }
+
+    async getTransfer({ blockNum, trxId }) {
+        const transfers = await Transfer.find(
+            { $or: [{ blockNum }, { trxId }] },
+            {
+                _id: false,
+                __v: false,
+                createdAt: false,
+                updatedAt: false,
+            },
+            { lean: true }
+        ).sort({ _id: -1 });
+
+        return {
+            items: transfers || [],
+        };
+    }
+
+    async getBlockSubscribeStatus() {
+        const {
+            blockId,
+            blockNum,
+            blockTime,
+            lastIrreversible,
+            lastFork,
+        } = await BlockSubscribeModel.findOne();
+
+        return {
+            blockId,
+            blockNum,
+            blockTime,
+            lastIrreversible,
+            lastFork,
+            status: 'running',
+        };
+    }
+
+    async getVersion() {
+        return {
+            version: packageJson.version,
+        };
     }
 }
 
