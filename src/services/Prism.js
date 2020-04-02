@@ -5,6 +5,8 @@ const Logger = core.utils.Logger;
 
 const MainPrismController = require('../controllers/prism/Main');
 
+const BlockSubscribeStatusModel = require('../models/BlockSubscribeStatus');
+
 class Prism extends BasicService {
     constructor() {
         super();
@@ -26,8 +28,15 @@ class Prism extends BasicService {
     }
 
     async _handleBlock({ type, data }) {
+        const status = {
+            blockNum: data.blockNum,
+            blockId: data.id,
+            blockTime: data.blockTime,
+        };
+
         switch (type) {
             case 'IRREVERSIBLE_BLOCK':
+                status.lastIrreversible = data.blockNum;
                 await this._mainPrismController.registerLIB(data.blockNum);
                 break;
 
@@ -41,9 +50,12 @@ class Prism extends BasicService {
                 break;
 
             case 'FORK':
+                status.lastFork = data.baseBlockNum;
                 Logger.info('STARTING FORK ON BLOCK', data.baseBlockNum);
                 await this._mainPrismController.handleFork(data.baseBlockNum);
         }
+
+        await BlockSubscribeStatusModel.updateOne({}, status, { upsert: true });
     }
 }
 

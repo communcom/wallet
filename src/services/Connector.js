@@ -103,6 +103,28 @@ class Connector extends BasicConnector {
                         },
                     },
                 },
+                getTransfer: {
+                    handler: this._wallet.getTransfer,
+                    scope: this._wallet,
+                    validation: {
+                        properties: {
+                            blockNum: {
+                                type: 'number',
+                            },
+                            trxId: {
+                                type: 'string',
+                            },
+                        },
+                    },
+                },
+                getBlockSubscribeStatus: {
+                    handler: this._wallet.getBlockSubscribeStatus,
+                    scope: this._wallet,
+                },
+                getVersion: {
+                    handler: this._wallet.getVersion,
+                    scope: this._wallet,
+                },
             },
             serverDefaults: {
                 parents: {
