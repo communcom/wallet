@@ -15,6 +15,9 @@ class Prism extends BasicService {
     }
 
     async start() {
+        this._recentTransactions = new Set();
+        this._currentBlockNum = 0;
+
         const subscriber = new BlockSubscribe({
             handler: this._handleBlock.bind(this),
         });
@@ -25,6 +28,14 @@ class Prism extends BasicService {
             Logger.error('Cant start block subscriber:', error);
             process.exit(1);
         }
+    }
+
+    getCurrentBlockNum() {
+        return this._currentBlockNum;
+    }
+
+    hasRecentTransaction(id) {
+        return this._recentTransactions.has(id);
     }
 
     async _handleBlock({ type, data }) {
@@ -55,7 +66,30 @@ class Prism extends BasicService {
                 await this._mainPrismController.handleFork(data.baseBlockNum);
         }
 
+        this._emitHandled(data);
+
         await BlockSubscribeStatusModel.updateOne({}, status, { upsert: true });
+    }
+
+    _emitHandled(block) {
+        const blockNum = block.blockNum;
+
+        this._currentBlockNum = blockNum;
+
+        this.emit('blockDone', blockNum);
+
+        for (const transaction of block.transactions) {
+            if (!transaction || !transaction.actions) {
+                Logger.warn(`Empty transaction - ${blockNum}`);
+                return;
+            }
+
+            const id = transaction.id;
+
+            this.emit('transactionDone', id);
+
+            this._recentTransactions.add(id);
+        }
     }
 }
 
