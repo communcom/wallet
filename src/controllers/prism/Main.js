@@ -145,6 +145,9 @@ class Main {
                 case 'setinfo':
                     await this._point.handleCommunitySetInfo(action);
                     break;
+                case 'setsysparams':
+                    await this._point.handleChangeCommunityName(action);
+                    break;
             }
         }
 
