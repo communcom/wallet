@@ -3,6 +3,8 @@ const BasicService = core.services.Basic;
 const BlockSubscribe = core.services.BlockSubscribe;
 const Logger = core.utils.Logger;
 
+const env = require('../data/env');
+
 const MainPrismController = require('../controllers/prism/Main');
 
 const BlockSubscribeStatusModel = require('../models/BlockSubscribeStatus');
@@ -89,6 +91,12 @@ class Prism extends BasicService {
             this.emit('transactionDone', id);
 
             this._recentTransactions.add(id);
+
+            setTimeout(
+                // Clean lexical scope for memory optimization
+                (id => () => this._recentTransactions.delete(id))(id),
+                env.GLS_RECENT_TRANSACTION_ID_TTL
+            );
         }
     }
 }

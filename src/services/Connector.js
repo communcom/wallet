@@ -5,11 +5,10 @@ const Wallet = require('../controllers/Wallet');
 const Block = require('../controllers/Block');
 
 class Connector extends BasicConnector {
-    constructor({ prism }) {
+    constructor() {
         super();
 
         this._wallet = new Wallet({ connector: this });
-        this._block = new Block({ prismService: prism });
     }
 
     async start() {
@@ -114,31 +113,6 @@ class Connector extends BasicConnector {
                                 type: 'number',
                             },
                             trxId: {
-                                type: 'string',
-                            },
-                        },
-                    },
-                },
-                waitForBlock: {
-                    handler: this._block.waitForBlock,
-                    scope: this._block,
-                    validation: {
-                        required: ['blockNum'],
-                        properties: {
-                            blockNum: {
-                                type: 'number',
-                                minValue: 0,
-                            },
-                        },
-                    },
-                },
-                waitForTransaction: {
-                    handler: this._block.waitForTransaction,
-                    scope: this._block,
-                    validation: {
-                        required: ['transactionId'],
-                        properties: {
-                            transactionId: {
                                 type: 'string',
                             },
                         },
