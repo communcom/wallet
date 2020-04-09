@@ -29,7 +29,8 @@ class Main {
             }
 
             const trxData = {
-                trxId: id,
+                blockId: id,
+                trxId: transaction.id,
                 blockNum,
                 timestamp: blockTime,
             };
