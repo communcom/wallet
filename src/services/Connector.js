@@ -2,6 +2,7 @@ const core = require('cyberway-core-service');
 const BasicConnector = core.services.Connector;
 
 const Wallet = require('../controllers/Wallet');
+const Block = require('../controllers/Block');
 
 class Connector extends BasicConnector {
     constructor() {
@@ -102,6 +103,28 @@ class Connector extends BasicConnector {
                             },
                         },
                     },
+                },
+                getTransfer: {
+                    handler: this._wallet.getTransfer,
+                    scope: this._wallet,
+                    validation: {
+                        properties: {
+                            blockNum: {
+                                type: 'number',
+                            },
+                            trxId: {
+                                type: 'string',
+                            },
+                        },
+                    },
+                },
+                getBlockSubscribeStatus: {
+                    handler: this._wallet.getBlockSubscribeStatus,
+                    scope: this._wallet,
+                },
+                getVersion: {
+                    handler: this._wallet.getVersion,
+                    scope: this._wallet,
                 },
             },
             serverDefaults: {

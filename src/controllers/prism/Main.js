@@ -1,5 +1,7 @@
 const core = require('cyberway-core-service');
-const { Logger, metrics } = core.utils;
+const { Logger } = core.utils;
+
+const TransferModel = require('../../models/Transfer');
 
 const Balance = require('./Balance');
 const Currency = require('./Currency');
@@ -8,7 +10,7 @@ const Point = require('./Point');
 const Transfer = require('./Transfer');
 const UserMeta = require('./UserMeta');
 
-const REVERSIBLE_MODELS = [];
+const REVERSIBLE_MODELS = [TransferModel];
 
 class Main {
     constructor() {
@@ -27,7 +29,8 @@ class Main {
             }
 
             const trxData = {
-                trxId: id,
+                blockId: id,
+                trxId: transaction.id,
                 blockNum,
                 timestamp: blockTime,
             };
@@ -39,9 +42,8 @@ class Main {
     }
 
     async registerLIB(blockNum) {
-        /* FIXME
         const markAsIrreversibleOperations = [];
-        for (const model of Object.keys(REVERSIBLE_MODELS)) {
+        for (const model of REVERSIBLE_MODELS) {
             markAsIrreversibleOperations.push(
                 model.updateMany({ blockNum }, { $set: { isIrreversible: true } }).catch(error => {
                     Logger.error(
@@ -53,13 +55,13 @@ class Main {
         }
 
         return Promise.all(markAsIrreversibleOperations);
-        */
     }
 
     async handleFork(baseBlockNum) {
         const irrelevantDataDeleteOperations = [];
 
-        for (const model of REVERSIBLE_MODELS) {
+        // FIXME
+        for (const model of [] /* REVERSIBLE_MODELS */) {
             irrelevantDataDeleteOperations.push(
                 model.deleteMany({ blockNum: { $gt: baseBlockNum } }).catch(error => {
                     Logger.error(
@@ -118,6 +120,9 @@ class Main {
                 case 'transfer':
                     await this._transfer.handlePointTransfer(action, trxData);
                     break;
+                case 'setparams':
+                    await this._point.handlePointSetParams(action);
+                    break;
             }
         }
 
@@ -139,7 +144,7 @@ class Main {
                     await this._point.handleCreateCommunity(action);
                     break;
                 case 'setinfo':
-                    await this._point.handleSetInfo(action);
+                    await this._point.handleCommunitySetInfo(action);
                     break;
             }
         }

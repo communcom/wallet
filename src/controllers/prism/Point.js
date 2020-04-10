@@ -71,7 +71,7 @@ class Point {
         }
     }
 
-    async handleSetInfo(action) {
+    async handleCommunitySetInfo(action) {
         const { args } = action;
 
         if (!args.avatar_image) {
@@ -91,6 +91,32 @@ class Point {
             );
 
             verbose('Updated point logo', args.commun_code);
+        }
+    }
+
+    async handlePointSetParams({ args }) {
+        const {
+            commun_code: symbol,
+            fee,
+            transfer_fee: transferFee,
+            min_transfer_fee_points: minTransferFeePoints,
+        } = args;
+
+        const pointObject = await PointModel.findOne({ symbol }, { _id: true }, { lean: true });
+
+        if (pointObject) {
+            await PointModel.updateOne(
+                { _id: pointObject._id },
+                {
+                    $set: {
+                        fee,
+                        transferFee,
+                        minTransferFeePoints,
+                    },
+                }
+            );
+
+            verbose('Updated point info', symbol);
         }
     }
 

@@ -1,10 +1,14 @@
 const core = require('cyberway-core-service');
 const BasicController = core.controllers.Basic;
 
+const packageJson = require('../../package.json');
+
+const BlockSubscribeModel = require('../models/BlockSubscribeStatus');
 const BalanceModel = require('../models/Balance');
 const HistoryModel = require('../models/History');
 const PointModel = require('../models/Point');
 const Claim = require('../models/Claim');
+const Transfer = require('../models/Transfer');
 
 const Utils = require('../utils/Utils');
 const { calculateBuyAmount, calculateSellAmount } = require('../utils/price');
@@ -58,7 +62,20 @@ class Wallet extends BasicController {
         if (symbol !== 'all') {
             if (symbol === 'CMN') {
                 transferTypeFilter.$or = [
-                    { $and: [{ actionType: 'transfer' }, { transferType: 'token' }] },
+                    {
+                        $and: [
+                            {
+                                actionType: {
+                                    $in: [
+                                        'transfer',
+                                        'referralRegisterBonus',
+                                        'referralPurchaseBonus',
+                                    ],
+                                },
+                            },
+                            { transferType: 'token' },
+                        ],
+                    },
                     { $and: [{ actionType: 'convert' }, { transferType: 'point' }] },
                 ];
             } else {
@@ -119,6 +136,12 @@ class Wallet extends BasicController {
                 },
             },
             {
+                $skip: offset,
+            },
+            {
+                $limit: limit,
+            },
+            {
                 $lookup: {
                     from: 'usermetas',
                     localField: 'sender',
@@ -132,6 +155,14 @@ class Wallet extends BasicController {
                     localField: 'receiver',
                     foreignField: 'userId',
                     as: 'receiverMeta',
+                },
+            },
+            {
+                $lookup: {
+                    from: 'usermetas',
+                    localField: 'referralInitiator',
+                    foreignField: 'userId',
+                    as: 'referralInitiatorMeta',
                 },
             },
             {
@@ -156,9 +187,7 @@ class Wallet extends BasicController {
             },
         ];
 
-        const transfers = await HistoryModel.aggregate(pipeline)
-            .skip(offset)
-            .limit(limit);
+        const transfers = await HistoryModel.aggregate(pipeline);
 
         const items = [];
 
@@ -169,17 +198,28 @@ class Wallet extends BasicController {
             const sender = {
                 userId: transfer.sender,
             };
+            const referral = {
+                userId: transfer.referralInitiator,
+            };
 
             const point = {};
 
-            if (transfer.receiverMeta[0]) {
-                receiver.username = transfer.receiverMeta[0].username;
-                receiver.avatarUrl = transfer.receiverMeta[0].avatarUrl;
+            const receiverMeta = transfer.receiverMeta[0];
+            if (receiverMeta) {
+                receiver.username = receiverMeta.username;
+                receiver.avatarUrl = receiverMeta.avatarUrl;
             }
 
-            if (transfer.senderMeta[0]) {
-                sender.username = transfer.senderMeta[0].username;
-                sender.avatarUrl = transfer.senderMeta[0].avatarUrl;
+            const senderMeta = transfer.senderMeta[0];
+            if (senderMeta) {
+                sender.username = senderMeta.username;
+                sender.avatarUrl = senderMeta.avatarUrl;
+            }
+
+            const referralMeta = transfer.referralInitiatorMeta[0];
+            if (referralMeta) {
+                referral.username = referralMeta.username;
+                referral.avatarUrl = referralMeta.avatarUrl;
             }
 
             const [pointInfo] = transfer.pointInfo;
@@ -196,12 +236,14 @@ class Wallet extends BasicController {
                 holdType: transfer.holdType,
                 exchangeAmount: transfer.exchangeAmount,
                 direction: transfer.sender === userId ? 'send' : 'receive',
+                ...transfer.referralData,
             };
 
             items.push({
                 id: transfer._id,
                 sender: sender,
                 receiver: receiver,
+                referral: referral.userId ? referral : undefined,
                 quantity: transfer.quantity,
                 symbol: transfer.symbol,
                 point,
@@ -327,6 +369,48 @@ class Wallet extends BasicController {
         }
 
         return point;
+    }
+
+    async getTransfer({ blockNum, trxId }) {
+        const transfers = await Transfer.find(
+            { $or: [{ blockNum }, { trxId }] },
+            {
+                _id: false,
+                __v: false,
+                createdAt: false,
+                updatedAt: false,
+            },
+            { lean: true }
+        ).sort({ _id: -1 });
+
+        return {
+            items: transfers || [],
+        };
+    }
+
+    async getBlockSubscribeStatus() {
+        const {
+            blockId,
+            blockNum,
+            blockTime,
+            lastIrreversible,
+            lastFork,
+        } = await BlockSubscribeModel.findOne();
+
+        return {
+            blockId,
+            blockNum,
+            blockTime,
+            lastIrreversible,
+            lastFork,
+            status: 'running',
+        };
+    }
+
+    async getVersion() {
+        return {
+            version: packageJson.version,
+        };
     }
 }
 
