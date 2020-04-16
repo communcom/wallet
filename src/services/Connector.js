@@ -46,6 +46,11 @@ class Connector extends BasicConnector {
                                 enum: ['all', 'none'],
                                 default: 'all',
                             },
+                            holdType: {
+                                type: 'string',
+                                enum: ['all', 'like', 'dislike', 'none'],
+                                default: 'all',
+                            },
                         },
                     },
                 },
