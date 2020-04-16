@@ -53,11 +53,21 @@ class Wallet extends BasicController {
         };
     }
 
-    async getTransferHistory({ userId, direction, symbol, transferType, rewards, offset, limit }) {
+    async getTransferHistory({
+        userId,
+        direction,
+        symbol,
+        transferType,
+        rewards,
+        holdType,
+        offset,
+        limit,
+    }) {
         const directionFilter = [];
         const symbolFilter = {};
         const transferTypeFilter = {};
         const rewardsFilter = {};
+        const holdTypeFilter = {};
 
         if (symbol !== 'all') {
             if (symbol === 'CMN') {
@@ -122,8 +132,28 @@ class Wallet extends BasicController {
             default:
         }
 
+        switch (holdType) {
+            case 'like':
+                holdTypeFilter.holdType = 'like';
+                break;
+            case 'dislike':
+                holdTypeFilter.holdType = 'dislike';
+                break;
+            case 'none':
+                holdTypeFilter.$nor = [{ holdType: 'like' }, { holdType: 'dislike' }];
+                break;
+            case 'all':
+            default:
+        }
+
         const filterQuery = {
-            $and: [{ $or: directionFilter }, symbolFilter, transferTypeFilter, rewardsFilter],
+            $and: [
+                { $or: directionFilter },
+                symbolFilter,
+                transferTypeFilter,
+                rewardsFilter,
+                holdTypeFilter,
+            ],
         };
 
         const pipeline = [

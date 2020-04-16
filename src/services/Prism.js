@@ -56,6 +56,7 @@ class Prism extends BasicService {
             case 'BLOCK':
                 try {
                     await this._mainPrismController.disperse(data);
+                    this._emitHandled(data);
                 } catch (error) {
                     Logger.error('Cant disperse block: ', data.blockNum, error);
                     process.exit(1);
@@ -67,8 +68,6 @@ class Prism extends BasicService {
                 Logger.info('STARTING FORK ON BLOCK', data.baseBlockNum);
                 await this._mainPrismController.handleFork(data.baseBlockNum);
         }
-
-        this._emitHandled(data);
 
         await BlockSubscribeStatusModel.updateOne({}, status, { upsert: true });
     }
