@@ -3,6 +3,8 @@ const BasicService = core.services.Basic;
 const BlockSubscribe = core.services.BlockSubscribe;
 const Logger = core.utils.Logger;
 
+const env = require('../data/env');
+
 const MainPrismController = require('../controllers/prism/Main');
 
 const BlockSubscribeStatusModel = require('../models/BlockSubscribeStatus');
@@ -54,6 +56,7 @@ class Prism extends BasicService {
             case 'BLOCK':
                 try {
                     await this._mainPrismController.disperse(data);
+                    this._emitHandled(data);
                 } catch (error) {
                     Logger.error('Cant disperse block: ', data.blockNum, error);
                     process.exit(1);
@@ -65,8 +68,6 @@ class Prism extends BasicService {
                 Logger.info('STARTING FORK ON BLOCK', data.baseBlockNum);
                 await this._mainPrismController.handleFork(data.baseBlockNum);
         }
-
-        this._emitHandled(data);
 
         await BlockSubscribeStatusModel.updateOne({}, status, { upsert: true });
     }
@@ -89,6 +90,12 @@ class Prism extends BasicService {
             this.emit('transactionDone', id);
 
             this._recentTransactions.add(id);
+
+            setTimeout(
+                // Clean lexical scope for memory optimization
+                (id => () => this._recentTransactions.delete(id))(id),
+                env.GLS_RECENT_TRANSACTION_ID_TTL
+            );
         }
     }
 }

@@ -28,6 +28,16 @@ class Balance {
             return;
         }
 
+        const balanceModel = await BalanceModel.findOne({ userId: args.owner });
+
+        if (balanceModel) {
+            const balances = balanceModel.balances.filter(b => b.symbol === args.commun_code);
+
+            if (balances.length > 0) {
+                return;
+            }
+        }
+
         await this._createOrUpdateUserBalance({
             userId: args.owner,
             symbol: args.commun_code,
