@@ -1,5 +1,6 @@
 const core = require('cyberway-core-service');
 const BasicController = core.controllers.Basic;
+const BigNum = core.types.BigNum;
 
 const packageJson = require('../../package.json');
 
@@ -324,13 +325,20 @@ class Wallet extends BasicController {
             for (const point of points) {
                 const balanceObj = balancesMap.get(point.symbol);
 
+                let price = 0;
+                if (balanceObj.balance != 0) {
+                    price = new BigNum(
+                        balanceObj.balance / calculateBuyAmount(point, `1 ${point.symbol}`)
+                    ).toFixed(4);
+                }
+
                 balancesMap.set(point.symbol, {
                     symbol: balanceObj.symbol,
                     balance: balanceObj.balance,
                     logo: point.logo,
                     name: point.name,
                     frozen: balanceObj.frozen,
-                    price: calculateSellAmount(point, balanceObj.balance),
+                    price, // calculateSellAmount(point, balanceObj.balance),
                     transferFee: point.transferFee,
                 });
             }
