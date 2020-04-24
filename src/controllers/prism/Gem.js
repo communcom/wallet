@@ -161,7 +161,7 @@ class Gem {
             tracery,
         });
 
-        if (actionType === 'hold' && !userHistoryModel) {
+        if (actionType === 'hold' && userHistoryModel) {
             return;
         }
 
