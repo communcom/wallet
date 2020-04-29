@@ -42,6 +42,12 @@ module.exports = MongoDB.makeModel(
                     'contentId.communityId': 1,
                 },
             },
+            {
+                fields: {
+                    'contentId.userId': 1,
+                    'contentId.permlink': 1,
+                },
+            },
         ],
     }
 );
