@@ -2,7 +2,6 @@ const core = require('cyberway-core-service');
 const BasicConnector = core.services.Connector;
 
 const Wallet = require('../controllers/Wallet');
-const Block = require('../controllers/Block');
 
 class Connector extends BasicConnector {
     constructor() {
@@ -130,6 +129,43 @@ class Connector extends BasicConnector {
                 getVersion: {
                     handler: this._wallet.getVersion,
                     scope: this._wallet,
+                },
+                getDonations: {
+                    handler: this._wallet.getDonations,
+                    scope: this._wallet,
+                    validation: {
+                        required: ['userId', 'permlink'],
+                        properties: {
+                            userId: {
+                                type: 'string',
+                            },
+                            permlink: {
+                                type: 'string',
+                            },
+                        },
+                    },
+                },
+                getDonationsBulk: {
+                    handler: this._wallet.getDonationsBulk,
+                    scope: this._wallet,
+                    validation: {
+                        properties: {
+                            posts: {
+                                maxItems: 20,
+                                items: {
+                                    required: ['userId', 'permlink'],
+                                    properties: {
+                                        userId: {
+                                            type: 'string',
+                                        },
+                                        permlink: {
+                                            type: 'string',
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
                 },
             },
             serverDefaults: {
