@@ -9,6 +9,7 @@ const HistoryModel = require('../models/History');
 const PointModel = require('../models/Point');
 const Claim = require('../models/Claim');
 const Transfer = require('../models/Transfer');
+const Donation = require('../models/Donation');
 
 const Utils = require('../utils/Utils');
 const { calculateBuyAmount, calculateSellAmount } = require('../utils/price');
@@ -440,6 +441,100 @@ class Wallet extends BasicController {
     async getVersion() {
         return {
             version: packageJson.version,
+        };
+    }
+
+    async getDonations({ userId, permlink }) {
+        const { items } = await this.getDonationsBulk({ posts: [{ userId, permlink }] });
+
+        if (!items.length) {
+            return {};
+        }
+
+        const [donation] = items;
+
+        return {
+            ...donation,
+        };
+    }
+
+    async getDonationsBulk({ posts }) {
+        const match = { $or: [] };
+
+        for (const post of posts) {
+            match.$or.push({ ...post });
+        }
+
+        const pipeline = [
+            {
+                $match: match,
+            },
+            {
+                $project: {
+                    _id: 0,
+                    communityId: 1,
+                    userId: 1,
+                    permlink: 1,
+                    sender: 1,
+                    quantity: 1,
+                },
+            },
+            {
+                $lookup: {
+                    from: 'usermetas',
+                    let: { sender: '$sender' },
+                    as: 'senderMeta',
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: { $eq: ['$userId', '$$sender'] },
+                            },
+                        },
+                        {
+                            $project: {
+                                _id: 0,
+                                username: 1,
+                                avatarUrl: 1,
+                                userId: 1,
+                            },
+                        },
+                    ],
+                },
+            },
+            {
+                $group: {
+                    _id: { userId: '$userId', permlink: '$permlink' },
+                    contentId: {
+                        $first: {
+                            userId: '$userId',
+                            permlink: '$permlink',
+                            communityId: '$communityId',
+                        },
+                    },
+                    donations: {
+                        $push: {
+                            quantity: '$$CURRENT.quantity',
+                            sender: { $arrayElemAt: ['$$CURRENT.senderMeta', 0] },
+                        },
+                    },
+                    totalAmount: {
+                        $sum: {
+                            $toDouble: '$$CURRENT.quantity',
+                        },
+                    },
+                },
+            },
+            {
+                $project: {
+                    _id: 0,
+                },
+            },
+        ];
+
+        const items = await Donation.aggregate(pipeline);
+
+        return {
+            items,
         };
     }
 }
