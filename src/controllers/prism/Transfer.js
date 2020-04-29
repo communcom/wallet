@@ -5,6 +5,7 @@ const env = require('../../data/env');
 const TransferModel = require('../../models/Transfer');
 const Claim = require('../../models/Claim');
 const HistoryModel = require('../../models/History');
+const DonationModel = require('../../models/Donation');
 
 class Transfer {
     async handleTokenTransfer(action, trxData) {
@@ -73,6 +74,27 @@ class Transfer {
             meta.actionType = 'claim';
 
             delete meta.transferType;
+        }
+
+        const donationRegExp = new RegExp(
+            /donation for (?<communityId>[A-Z]+):(?<userId>[a-z0-9]+):(?<permlink>[0-9a-z-]+)/g
+        );
+
+        const donationMatch = donationRegExp.exec(memo);
+        if (donationMatch) {
+            const contentId = donationMatch.groups;
+
+            const { amount, symbol } = Utils.parseAsset(quantity);
+
+            await DonationModel.create({
+                ...contentId,
+                trxId: trxData.trxId,
+                sender: from,
+                quantity: amount,
+                symbol,
+            });
+
+            meta.actionType = 'donation';
         }
 
         await this._createTransfer({
