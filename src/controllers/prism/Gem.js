@@ -18,6 +18,7 @@ class Gem {
             return;
         }
 
+        /* TODO refactor
         const userGemModel = await UserGem.findOne({ userId: owner });
 
         if (userGemModel) {
@@ -57,6 +58,7 @@ class Gem {
 
             verbose('Created user gemstate:', owner, tracery);
         }
+        */
 
         this.handleHoldHistory(
             trxData,
@@ -87,6 +89,7 @@ class Gem {
             return;
         }
 
+        /* TODO refactor
         const userGemModel = await UserGem.findOne({ userId: owner });
 
         if (userGemModel) {
@@ -122,6 +125,7 @@ class Gem {
 
             verbose('Created user gemchop:', owner, tracery);
         }
+        */
 
         const { amount: unfrozenAmount } = Utils.parseAsset(unfrozen);
 
