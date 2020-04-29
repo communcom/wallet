@@ -65,6 +65,7 @@ module.exports = MongoDB.makeModel(
                 'burn',
                 'referralRegisterBonus',
                 'referralPurchaseBonus',
+                'donation',
             ],
         },
         transferType: {
