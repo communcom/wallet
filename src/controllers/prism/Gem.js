@@ -165,6 +165,11 @@ class Gem {
             return;
         }
 
+        let userHoldType = holdType;
+        if (userHistoryModel) {
+            userHoldType = actionType === 'unhold' ? userHistoryModel.holdType : holdType;
+        }
+
         await HistoryModel.create({
             trxId: trxData.trxId,
             timestamp: trxData.timestamp,
@@ -173,7 +178,7 @@ class Gem {
             quantity: amount,
             symbol,
             actionType,
-            holdType: actionType === 'unhold' ? userHistoryModel.holdType : holdType,
+            holdType: userHoldType,
             tracery,
             frozen,
             unfrozen,

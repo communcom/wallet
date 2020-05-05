@@ -43,8 +43,8 @@ services:
       dockerfile: Dockerfile
     networks:
       - services-tier
-      ports:
-        - $GLS_CONNECTOR_WRITER_PORT:$GLS_CONNECTOR_PORT:$GLS_CONNECTOR_WRITER_PORT
+    ports:
+        - $GLS_CONNECTOR_HOST:$GLS_CONNECTOR_WRITER_PORT:$GLS_CONNECTOR_WRITER_PORT
     environment:
       - GLS_ENABLE_WRITE_MODE=true
     env_file:
