@@ -136,6 +136,26 @@ class Point {
             verbose('Updated point name', args.commun_code);
         }
     }
+
+    async handleChangeCommunityName(action) {
+        const { args } = action;
+
+        if (!args.community_name) {
+            return;
+        }
+
+        const pointObject = await PointModel.findOne({ symbol: args.commun_code });
+
+        await PointModel.updateOne(
+            { _id: pointObject._id },
+            {
+                $set: {
+                    name: args.community_name,
+                },
+            }
+        );
+        verbose('Updated point name', args.commun_code);
+    }
 }
 
 module.exports = Point;
