@@ -81,6 +81,7 @@ class Wallet extends BasicController {
                                         'transfer',
                                         'referralRegisterBonus',
                                         'referralPurchaseBonus',
+                                        'donation',
                                     ],
                                 },
                             },

@@ -24,6 +24,9 @@ module.exports = MongoDB.makeModel(
             type: String,
             required: true,
         },
+        initial: {
+            type: String,
+        },
         symbol: {
             type: String,
             required: true,
