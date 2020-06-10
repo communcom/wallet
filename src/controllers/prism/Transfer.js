@@ -319,7 +319,8 @@ class Transfer {
                     supply: true,
                     cw: true,
                     fee: true,
-                }
+                },
+                { lean: true }
             );
         }
 
@@ -336,7 +337,8 @@ class Transfer {
                     supply: true,
                     cw: true,
                     fee: true,
-                }
+                },
+                { lean: true }
             );
 
             if (communityPoint && sellPoint) {

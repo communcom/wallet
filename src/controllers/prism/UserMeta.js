@@ -17,7 +17,7 @@ class UserMetaInfo {
             return;
         }
 
-        const userMetaModel = await UserMeta.findOne({ userId });
+        const userMetaModel = await UserMeta.findOne({ userId }, { _id: false }, { lean: true });
 
         if (userMetaModel) {
             await UserMeta.updateOne({ userId }, { $set: { 'meta.username': username } });
@@ -39,7 +39,7 @@ class UserMetaInfo {
 
         const userId = account;
 
-        const userMetaModel = await UserMeta.findOne({ userId });
+        const userMetaModel = await UserMeta.findOne({ userId }, { _id: false }, { lean: true });
 
         if (userMetaModel) {
             await UserMeta.updateOne({ userId }, { avatarUrl: meta.avatar_url });

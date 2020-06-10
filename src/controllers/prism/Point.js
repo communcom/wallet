@@ -78,14 +78,20 @@ class Point {
             return;
         }
 
-        const pointObject = await PointModel.findOne({ symbol: args.commun_code });
+        const { commun_code: symbol, avatar_image: logo } = args;
+
+        const pointObject = await PointModel.findOne(
+            { symbol },
+            { issueHistory: false, restockHistory: false },
+            { lean: true }
+        );
 
         if (pointObject) {
             await PointModel.updateOne(
-                { _id: pointObject._id },
+                { symbol },
                 {
                     $set: {
-                        logo: args.avatar_image,
+                        logo,
                     },
                 }
             );
@@ -102,11 +108,15 @@ class Point {
             min_transfer_fee_points: minTransferFeePoints,
         } = args;
 
-        const pointObject = await PointModel.findOne({ symbol }, { _id: true }, { lean: true });
+        const pointObject = await PointModel.findOne(
+            { symbol },
+            { issueHistory: false, restockHistory: false },
+            { lean: true }
+        );
 
         if (pointObject) {
             await PointModel.updateOne(
-                { _id: pointObject._id },
+                { symbol },
                 {
                     $set: {
                         fee,
@@ -122,14 +132,21 @@ class Point {
 
     async handleCreateCommunity(action) {
         const { args } = action;
-        const pointObject = await PointModel.findOne({ symbol: args.commun_code });
+
+        const { commun_code: symbol, community_name: name } = args;
+
+        const pointObject = await PointModel.findOne(
+            { symbol },
+            { issueHistory: false, restockHistory: false },
+            { lean: true }
+        );
 
         if (pointObject) {
             await PointModel.updateOne(
-                { _id: pointObject._id },
+                { symbol },
                 {
                     $set: {
-                        name: args.community_name,
+                        name,
                     },
                 }
             );
@@ -144,17 +161,25 @@ class Point {
             return;
         }
 
-        const pointObject = await PointModel.findOne({ symbol: args.commun_code });
+        const { commun_code: symbol, community_name: name } = args;
 
-        await PointModel.updateOne(
-            { _id: pointObject._id },
-            {
-                $set: {
-                    name: args.community_name,
-                },
-            }
+        const pointObject = await PointModel.findOne(
+            { symbol },
+            { issueHistory: false, restockHistory: false },
+            { lean: true }
         );
-        verbose('Updated point name', args.commun_code);
+
+        if (pointObject) {
+            await PointModel.updateOne(
+                { symbol },
+                {
+                    $set: {
+                        name,
+                    },
+                }
+            );
+            verbose('Updated point name', args.commun_code);
+        }
     }
 }
 

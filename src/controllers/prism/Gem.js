@@ -154,12 +154,16 @@ class Gem {
 
         const { amount, symbol } = Utils.parseAsset(asset);
 
-        const userHistoryModel = await HistoryModel.findOne({
-            symbol,
-            sender: owner,
-            receiver: creator,
-            tracery,
-        });
+        const userHistoryModel = await HistoryModel.findOne(
+            {
+                symbol,
+                sender: owner,
+                receiver: creator,
+                tracery,
+            },
+            { _id: false },
+            { lean: true }
+        );
 
         if (actionType === 'hold' && userHistoryModel) {
             return;

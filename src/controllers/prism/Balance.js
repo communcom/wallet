@@ -28,7 +28,11 @@ class Balance {
             return;
         }
 
-        const balanceModel = await BalanceModel.findOne({ userId: args.owner });
+        const balanceModel = await BalanceModel.findOne(
+            { userId: args.owner },
+            { _id: false },
+            { lean: true }
+        );
 
         if (balanceModel) {
             const balances = balanceModel.balances.filter(b => b.symbol === args.commun_code);
@@ -60,7 +64,7 @@ class Balance {
     }
 
     async _createOrUpdateUserBalance({ userId, balance, symbol }) {
-        const balanceModel = await BalanceModel.findOne({ userId });
+        const balanceModel = await BalanceModel.findOne({ userId }, { _id: false }, { lean: true });
 
         if (balanceModel) {
             const balances = balanceModel.balances.filter(b => b.symbol === symbol);
@@ -114,10 +118,14 @@ class Balance {
             return;
         }
 
-        const balanceModel = await BalanceModel.findOne({
-            userId: account,
-            'balances.symbol': symbol,
-        });
+        const balanceModel = await BalanceModel.findOne(
+            {
+                userId: account,
+                'balances.symbol': symbol,
+            },
+            { _id: false },
+            { lean: true }
+        );
 
         if (balanceModel) {
             await BalanceModel.updateOne(
@@ -141,10 +149,14 @@ class Balance {
             return;
         }
 
-        const balanceModel = await BalanceModel.findOne({
-            userId: owner,
-            'balances.symbol': symbol,
-        });
+        const balanceModel = await BalanceModel.findOne(
+            {
+                userId: owner,
+                'balances.symbol': symbol,
+            },
+            { _id: false },
+            { lean: true }
+        );
 
         if (balanceModel) {
             const point = balanceModel.balances.find(b => b.symbol === symbol);
