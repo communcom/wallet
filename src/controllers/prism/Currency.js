@@ -11,7 +11,11 @@ class Currency {
 
         const { symbol } = Utils.parseAsset(args.max_supply);
 
-        const pointObject = await PointModel.findOne({ symbol });
+        const pointObject = await PointModel.findOne(
+            { symbol },
+            { issueHistory: false, restockHistory: false },
+            { lean: true }
+        );
 
         if (pointObject) {
             const {

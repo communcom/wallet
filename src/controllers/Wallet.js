@@ -298,7 +298,11 @@ class Wallet extends BasicController {
             balances: [],
         };
 
-        const balanceObject = await BalanceModel.findOne({ userId });
+        const balanceObject = await BalanceModel.findOne(
+            { userId },
+            { _id: false },
+            { lean: true }
+        );
         if (balanceObject) {
             const pointsSymbols = [];
             const balancesMap = new Map();
@@ -320,7 +324,8 @@ class Wallet extends BasicController {
                 {
                     restockHistory: false,
                     issueHistory: false,
-                }
+                },
+                { lean: true }
             );
 
             for (const point of points) {
@@ -352,7 +357,8 @@ class Wallet extends BasicController {
                 _id: false,
                 issueHistory: false,
                 restockHistory: false,
-            }
+            },
+            { lean: true }
         );
 
         if (!point) {
@@ -371,7 +377,8 @@ class Wallet extends BasicController {
                 _id: false,
                 issueHistory: false,
                 restockHistory: false,
-            }
+            },
+            { lean: true }
         );
 
         if (!point) {
@@ -393,7 +400,8 @@ class Wallet extends BasicController {
                 createdAt: false,
                 updatedAt: false,
                 __v: false,
-            }
+            },
+            { lean: true }
         );
 
         if (!point) {
