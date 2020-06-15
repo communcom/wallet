@@ -12,6 +12,12 @@ const UserMeta = require('./UserMeta');
 
 const REVERSIBLE_MODELS = [TransferModel];
 
+const ALLOWED_CONTRACTS = ['cyber.token', 'cyber.domain', 'c.point', 'c.social', 'c.list'];
+
+function isAllowedAction({ code, receiver }) {
+    return ALLOWED_CONTRACTS.includes(code) && ALLOWED_CONTRACTS.includes(receiver);
+}
+
 class Main {
     constructor() {
         this._balance = new Balance();
@@ -36,7 +42,9 @@ class Main {
             };
 
             for (const action of transaction.actions) {
-                await this._disperseAction(action, trxData);
+                if (isAllowedAction(action)) {
+                    await this._disperseAction(action, trxData);
+                }
             }
         }
     }
@@ -85,7 +93,8 @@ class Main {
                     break;
                 case 'bulkpayment':
                 case 'bulktransfer':
-                    await this._transfer.handleBulkTransfer(action, trxData);
+                    // disabled
+                    // await this._transfer.handleBulkTransfer(action, trxData);
                     break;
                 case 'claim':
                     // disabled
@@ -112,7 +121,8 @@ class Main {
                     await this._point.handlePointCreateEvent(action);
                     break;
                 case 'issue':
-                    await this._point.handleIssuePoint(action, trxData);
+                    // disabled
+                    // await this._point.handleIssuePoint(action, trxData);
                     break;
                 case 'open':
                     await this._balance.handleOpenBalance(action);
@@ -126,7 +136,7 @@ class Main {
             }
         }
 
-        if (action.action === 'newusername') {
+        if (action.code === 'cyber.domain' && action.action === 'newusername') {
             await this._userMeta.handleCreateUsernameAction(action);
         }
 

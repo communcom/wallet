@@ -154,15 +154,24 @@ class Gem {
 
         const { amount, symbol } = Utils.parseAsset(asset);
 
-        const userHistoryModel = await HistoryModel.findOne({
-            symbol,
-            sender: owner,
-            receiver: creator,
-            tracery,
-        });
+        const userHistoryModel = await HistoryModel.findOne(
+            {
+                symbol,
+                sender: owner,
+                receiver: creator,
+                tracery,
+            },
+            { _id: false },
+            { lean: true }
+        );
 
         if (actionType === 'hold' && userHistoryModel) {
             return;
+        }
+
+        let userHoldType = holdType;
+        if (userHistoryModel) {
+            userHoldType = actionType === 'unhold' ? userHistoryModel.holdType : holdType;
         }
 
         await HistoryModel.create({
@@ -173,7 +182,7 @@ class Gem {
             quantity: amount,
             symbol,
             actionType,
-            holdType: actionType === 'unhold' ? userHistoryModel.holdType : holdType,
+            holdType: userHoldType,
             tracery,
             frozen,
             unfrozen,

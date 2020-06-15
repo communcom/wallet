@@ -6,6 +6,9 @@ const TransferModel = require('../../models/Transfer');
 const Claim = require('../../models/Claim');
 const HistoryModel = require('../../models/History');
 const DonationModel = require('../../models/Donation');
+const PointModel = require('../../models/Point');
+
+const { calculateBuyAmount, calculateSellAmount } = require('../../utils/price');
 
 class Transfer {
     async handleTokenTransfer(action, trxData) {
@@ -76,26 +79,7 @@ class Transfer {
             delete meta.transferType;
         }
 
-        const donationRegExp = new RegExp(
-            /donation for (?<communityId>[A-Z]+):(?<userId>[a-z0-9]+):(?<permlink>[0-9a-z-]+)/g
-        );
-
-        const donationMatch = donationRegExp.exec(memo);
-        if (donationMatch) {
-            const contentId = donationMatch.groups;
-
-            const { amount, symbol } = Utils.parseAsset(quantity);
-
-            await DonationModel.create({
-                ...contentId,
-                trxId: trxData.trxId,
-                sender: from,
-                quantity: amount,
-                symbol,
-            });
-
-            meta.actionType = 'donation';
-        }
+        await this._processDonate({ sender: from, quantity, memo, trxId: trxData.trxId }, meta);
 
         await this._createTransfer({
             contractReceiver: action.receiver,
@@ -164,6 +148,8 @@ class Transfer {
         };
 
         this._processReferral({ from: sender, memo }, meta);
+
+        await this._processDonate({ sender, quantity, memo, trxId: trxData.trxId }, meta);
 
         await this._createTransfer({
             contractReceiver,
@@ -293,6 +279,77 @@ class Transfer {
         });
 
         verbose('Created history transfer');
+    }
+
+    async _processDonate({ sender, quantity, memo, trxId }, meta) {
+        const donationRegExp = new RegExp(
+            /donation for (?<communityId>[A-Z]+):(?<userId>[a-z0-9]+):(?<permlink>[0-9a-z-]+)/g
+        );
+
+        const donationMatch = donationRegExp.exec(memo);
+
+        if (!donationMatch) {
+            return;
+        }
+
+        const { communityId, userId, permlink } = donationMatch.groups;
+
+        const { amount, symbol } = Utils.parseAsset(quantity);
+
+        const donationObj = {
+            communityId,
+            userId,
+            permlink,
+            trxId,
+            sender,
+            quantity: amount,
+            symbol,
+        };
+
+        let communityPoint;
+        if (communityId !== symbol) {
+            donationObj.initial = quantity;
+            donationObj.symbol = communityId;
+
+            communityPoint = await PointModel.findOne(
+                { symbol: communityId },
+                {
+                    _id: false,
+                    reserve: true,
+                    supply: true,
+                    cw: true,
+                    fee: true,
+                },
+                { lean: true }
+            );
+        }
+
+        if (symbol === 'CMN') {
+            if (communityPoint) {
+                donationObj.quantity = calculateBuyAmount(communityPoint, amount);
+            }
+        } else {
+            const sellPoint = await PointModel.findOne(
+                { symbol },
+                {
+                    _id: false,
+                    reserve: true,
+                    supply: true,
+                    cw: true,
+                    fee: true,
+                },
+                { lean: true }
+            );
+
+            if (communityPoint && sellPoint) {
+                const sellPointsPrice = calculateSellAmount(sellPoint, amount);
+                donationObj.quantity = calculateBuyAmount(communityPoint, sellPointsPrice);
+            }
+        }
+
+        await DonationModel.create(donationObj);
+
+        meta.actionType = 'donation';
     }
 }
 
