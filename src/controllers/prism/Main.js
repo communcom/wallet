@@ -12,7 +12,14 @@ const UserMeta = require('./UserMeta');
 
 const REVERSIBLE_MODELS = [TransferModel];
 
-const ALLOWED_CONTRACTS = ['cyber.token', 'cyber.domain', 'c.point', 'c.social', 'c.list'];
+const ALLOWED_CONTRACTS = [
+    'cyber.domain',
+    'cyber.token',
+    'c.point',
+    'c.social',
+    'c.list',
+    'c.gallery',
+];
 
 function isAllowedAction({ code, receiver }) {
     return ALLOWED_CONTRACTS.includes(code) && ALLOWED_CONTRACTS.includes(receiver);
