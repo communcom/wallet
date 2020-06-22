@@ -98,10 +98,13 @@ class Wallet extends BasicController {
 
         switch (direction) {
             case 'receive':
-                directionFilter.push({ receiver: userId });
+                directionFilter.push(
+                    { receiver: userId },
+                    { actionType: { $not: { $eq: 'hold' } } }
+                );
                 break;
             case 'send':
-                directionFilter.push({ sender: userId });
+                directionFilter.push({ sender: userId }, { actionType: { $not: { $eq: 'hold' } } });
                 break;
             case 'all':
             default:
@@ -130,7 +133,7 @@ class Wallet extends BasicController {
 
         switch (rewards) {
             case 'none':
-                rewardsFilter.actionType = { $not: { $eq: 'reward' } };
+                rewardsFilter.$nor = [{ $or: [{ actionType: 'reward' }, { actionType: 'claim' }] }];
             case 'all':
             default:
         }
