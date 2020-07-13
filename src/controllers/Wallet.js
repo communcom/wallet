@@ -14,6 +14,7 @@ const Donation = require('../models/Donation');
 
 const Utils = require('../utils/Utils');
 const { calculateBuyAmount, calculateSellAmount } = require('../utils/price');
+const { buildQuery } = require('../utils/TransferHistoryBuilder');
 
 class Wallet extends BasicController {
     constructor({ ...params }) {
@@ -65,102 +66,14 @@ class Wallet extends BasicController {
         offset,
         limit,
     }) {
-        const directionFilter = [];
-        const symbolFilter = {};
-        const transferTypeFilter = {};
-        const rewardsFilter = {};
-        const holdTypeFilter = {};
-
-        if (symbol !== 'all') {
-            if (symbol === 'CMN') {
-                transferTypeFilter.$or = [
-                    {
-                        $and: [
-                            {
-                                actionType: {
-                                    $in: [
-                                        'transfer',
-                                        'referralRegisterBonus',
-                                        'referralPurchaseBonus',
-                                        'donation',
-                                    ],
-                                },
-                            },
-                            { transferType: 'token' },
-                        ],
-                    },
-                    { $and: [{ actionType: 'convert' }, { transferType: 'point' }] },
-                ];
-            } else {
-                symbolFilter.$or = [{ symbol }, { memo: symbol }];
-            }
-        }
-
-        switch (direction) {
-            case 'receive':
-                directionFilter.push(
-                    { receiver: userId },
-                    { actionType: { $not: { $eq: 'hold' } } }
-                );
-                break;
-            case 'send':
-                directionFilter.push({ sender: userId }, { actionType: { $not: { $eq: 'hold' } } });
-                break;
-            case 'all':
-            default:
-                directionFilter.push({ sender: userId }, { receiver: userId });
-        }
-
-        switch (transferType) {
-            case 'transfer':
-                transferTypeFilter.$and = [{ $or: [{ actionType: 'transfer' }] }];
-                break;
-            case 'convert':
-                transferTypeFilter.$and = [{ $or: [{ actionType: 'convert' }] }];
-                break;
-            case 'none':
-                transferTypeFilter.$nor = [
-                    { $or: [{ actionType: 'transfer' }, { actionType: 'convert' }] },
-                ];
-                break;
-            case 'all':
-            default:
-        }
-
-        if (!['all', 'none'].includes(transferType) && rewards === 'all') {
-            transferTypeFilter.$and[0].$or.push({ actionType: 'reward' });
-        }
-
-        switch (rewards) {
-            case 'none':
-                rewardsFilter.$nor = [{ $or: [{ actionType: 'reward' }, { actionType: 'claim' }] }];
-            case 'all':
-            default:
-        }
-
-        switch (holdType) {
-            case 'like':
-                holdTypeFilter.holdType = 'like';
-                break;
-            case 'dislike':
-                holdTypeFilter.holdType = 'dislike';
-                break;
-            case 'none':
-                holdTypeFilter.$nor = [{ holdType: 'like' }, { holdType: 'dislike' }];
-                break;
-            case 'all':
-            default:
-        }
-
-        const filterQuery = {
-            $and: [
-                { $or: directionFilter },
-                symbolFilter,
-                transferTypeFilter,
-                rewardsFilter,
-                holdTypeFilter,
-            ],
-        };
+        const filterQuery = buildQuery({
+            userId,
+            direction,
+            symbol,
+            transferType,
+            rewards,
+            holdType,
+        });
 
         const pipeline = [
             {
