@@ -470,6 +470,36 @@ class Wallet extends BasicController {
             items,
         };
     }
+
+    async getPointsPrices({ symbols }) {
+        const match = {};
+
+        if (!symbols.includes('all')) {
+            match.$or = symbols.map(symbol => ({ symbol }));
+        }
+
+        const points = await PointModel.find(
+            match,
+            {
+                _id: false,
+                symbol: true,
+                reserve: true,
+                supply: true,
+                cw: true,
+            },
+            { lean: true }
+        );
+
+        const result = { timestamp: Date.now() };
+
+        result.prices = points.reduce((acc, point) => {
+            acc[point.symbol] = calculateBuyAmount(point, `1 ${point.symbol}`);
+
+            return acc;
+        }, {});
+
+        return result;
+    }
 }
 
 module.exports = Wallet;

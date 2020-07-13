@@ -167,6 +167,21 @@ class Connector extends BasicConnector {
                         },
                     },
                 },
+                getPointsPrices: {
+                    handler: this._wallet.getPointsPrices,
+                    scope: this._wallet,
+                    validation: {
+                        properties: {
+                            symbols: {
+                                type: 'array',
+                                default: ['all'],
+                                items: {
+                                    type: 'string',
+                                },
+                            },
+                        },
+                    },
+                },
             },
             serverDefaults: {
                 parents: {
