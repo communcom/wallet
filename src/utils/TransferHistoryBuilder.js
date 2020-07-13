@@ -69,12 +69,12 @@ function buildQuery({ userId, direction, symbol, transferType, rewards, holdType
                 });
 
                 directionFilter.shift();
-                directionFilter.push({ receiver: 'c.point' });
+                directionFilter.push({ receiver: 'c.point', sender: userId });
             } else if (direction === 'send') {
                 typeFilters.push({ $and: [{ actionType: 'convert' }, { transferType: 'point' }] });
 
                 directionFilter.shift();
-                directionFilter.push({ receiver: 'c.point' });
+                directionFilter.push({ receiver: 'c.point', sender: userId });
             } else {
                 typeFilters.push({ transferType: 'point' }, { transferType: 'token' });
             }
