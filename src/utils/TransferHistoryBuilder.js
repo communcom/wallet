@@ -92,6 +92,9 @@ function buildQuery({ userId, direction, symbol, transferType, rewards, holdType
     switch (rewards) {
         case 'none':
             break;
+        case 'reward':
+            actionTypes.push('reward');
+            break;
         case 'claim':
             actionTypes.push('claim');
             break;

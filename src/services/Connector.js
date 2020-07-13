@@ -42,7 +42,7 @@ class Connector extends BasicConnector {
                             },
                             rewards: {
                                 type: 'string',
-                                enum: ['all', 'none'],
+                                enum: ['all', 'reward', 'claim', 'donation', 'none'],
                                 default: 'all',
                             },
                             holdType: {
