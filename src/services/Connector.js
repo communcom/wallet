@@ -42,7 +42,7 @@ class Connector extends BasicConnector {
                             },
                             rewards: {
                                 type: 'string',
-                                enum: ['all', 'none'],
+                                enum: ['all', 'reward', 'claim', 'donation', 'none'],
                                 default: 'all',
                             },
                             holdType: {
@@ -162,6 +162,21 @@ class Connector extends BasicConnector {
                                             type: 'string',
                                         },
                                     },
+                                },
+                            },
+                        },
+                    },
+                },
+                getPointsPrices: {
+                    handler: this._wallet.getPointsPrices,
+                    scope: this._wallet,
+                    validation: {
+                        properties: {
+                            symbols: {
+                                type: 'array',
+                                default: ['all'],
+                                items: {
+                                    type: 'string',
                                 },
                             },
                         },

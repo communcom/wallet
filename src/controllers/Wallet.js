@@ -1,5 +1,6 @@
 const core = require('cyberway-core-service');
 const BasicController = core.controllers.Basic;
+const BigNum = core.types.BigNum;
 
 const packageJson = require('../../package.json');
 
@@ -13,6 +14,7 @@ const Donation = require('../models/Donation');
 
 const Utils = require('../utils/Utils');
 const { calculateBuyAmount, calculateSellAmount } = require('../utils/price');
+const { buildQuery } = require('../utils/TransferHistoryBuilder');
 
 class Wallet extends BasicController {
     constructor({ ...params }) {
@@ -64,99 +66,14 @@ class Wallet extends BasicController {
         offset,
         limit,
     }) {
-        const directionFilter = [];
-        const symbolFilter = {};
-        const transferTypeFilter = {};
-        const rewardsFilter = {};
-        const holdTypeFilter = {};
-
-        if (symbol !== 'all') {
-            if (symbol === 'CMN') {
-                transferTypeFilter.$or = [
-                    {
-                        $and: [
-                            {
-                                actionType: {
-                                    $in: [
-                                        'transfer',
-                                        'referralRegisterBonus',
-                                        'referralPurchaseBonus',
-                                        'donation',
-                                    ],
-                                },
-                            },
-                            { transferType: 'token' },
-                        ],
-                    },
-                    { $and: [{ actionType: 'convert' }, { transferType: 'point' }] },
-                ];
-            } else {
-                symbolFilter.$or = [{ symbol }, { memo: symbol }];
-            }
-        }
-
-        switch (direction) {
-            case 'receive':
-                directionFilter.push({ receiver: userId });
-                break;
-            case 'send':
-                directionFilter.push({ sender: userId });
-                break;
-            case 'all':
-            default:
-                directionFilter.push({ sender: userId }, { receiver: userId });
-        }
-
-        switch (transferType) {
-            case 'transfer':
-                transferTypeFilter.$and = [{ $or: [{ actionType: 'transfer' }] }];
-                break;
-            case 'convert':
-                transferTypeFilter.$and = [{ $or: [{ actionType: 'convert' }] }];
-                break;
-            case 'none':
-                transferTypeFilter.$nor = [
-                    { $or: [{ actionType: 'transfer' }, { actionType: 'convert' }] },
-                ];
-                break;
-            case 'all':
-            default:
-        }
-
-        if (!['all', 'none'].includes(transferType) && rewards === 'all') {
-            transferTypeFilter.$and[0].$or.push({ actionType: 'reward' });
-        }
-
-        switch (rewards) {
-            case 'none':
-                rewardsFilter.actionType = { $not: { $eq: 'reward' } };
-            case 'all':
-            default:
-        }
-
-        switch (holdType) {
-            case 'like':
-                holdTypeFilter.holdType = 'like';
-                break;
-            case 'dislike':
-                holdTypeFilter.holdType = 'dislike';
-                break;
-            case 'none':
-                holdTypeFilter.$nor = [{ holdType: 'like' }, { holdType: 'dislike' }];
-                break;
-            case 'all':
-            default:
-        }
-
-        const filterQuery = {
-            $and: [
-                { $or: directionFilter },
-                symbolFilter,
-                transferTypeFilter,
-                rewardsFilter,
-                holdTypeFilter,
-            ],
-        };
+        const filterQuery = buildQuery({
+            userId,
+            direction,
+            symbol,
+            transferType,
+            rewards,
+            holdType,
+        });
 
         const pipeline = [
             {
@@ -331,13 +248,20 @@ class Wallet extends BasicController {
             for (const point of points) {
                 const balanceObj = balancesMap.get(point.symbol);
 
+                let price = 0;
+                if (balanceObj.balance != 0) {
+                    price = new BigNum(
+                        balanceObj.balance / calculateBuyAmount(point, `1 ${point.symbol}`)
+                    ).toFixed(4);
+                }
+
                 balancesMap.set(point.symbol, {
                     symbol: balanceObj.symbol,
                     balance: balanceObj.balance,
                     logo: point.logo,
                     name: point.name,
                     frozen: balanceObj.frozen,
-                    price: calculateSellAmount(point, balanceObj.balance),
+                    price, // calculateSellAmount(point, balanceObj.balance),
                     transferFee: point.transferFee,
                 });
             }
@@ -545,6 +469,36 @@ class Wallet extends BasicController {
         return {
             items,
         };
+    }
+
+    async getPointsPrices({ symbols }) {
+        const match = {};
+
+        if (!symbols.includes('all')) {
+            match.$or = symbols.map(symbol => ({ symbol }));
+        }
+
+        const points = await PointModel.find(
+            match,
+            {
+                _id: false,
+                symbol: true,
+                reserve: true,
+                supply: true,
+                cw: true,
+            },
+            { lean: true }
+        );
+
+        const result = { timestamp: Date.now() };
+
+        result.prices = points.reduce((acc, point) => {
+            acc[point.symbol] = calculateBuyAmount(point, `1 ${point.symbol}`);
+
+            return acc;
+        }, {});
+
+        return result;
     }
 }
 
