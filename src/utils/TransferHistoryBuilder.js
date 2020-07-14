@@ -1,23 +1,32 @@
-function buildQuery({ userId, direction, symbol, transferType, rewards, holdType }) {
-    const directionFilter = [];
+function buildQuery({
+    userId,
+    direction,
+    symbol,
+    transferType,
+    rewards,
+    donations,
+    claim,
+    holdType,
+}) {
     const symbolFilter = {};
-    const actionTypes = [];
     const typeFilters = [];
-
-    switch (direction) {
-        case 'receive':
-            directionFilter.push({ receiver: userId });
-            break;
-        case 'send':
-            directionFilter.push({ sender: userId });
-            break;
-        case 'all':
-        default:
-            directionFilter.push({ sender: userId }, { receiver: userId });
-    }
 
     if (symbol !== 'all') {
         if (symbol === 'CMN') {
+            const directionFilter = [];
+
+            switch (direction) {
+                case 'receive':
+                    directionFilter.push({ receiver: userId });
+                    break;
+                case 'send':
+                    directionFilter.push({ sender: userId });
+                    break;
+                case 'all':
+                default:
+                    directionFilter.push({ sender: userId }, { receiver: userId });
+            }
+
             return {
                 $and: [
                     symbolFilter,
@@ -53,107 +62,166 @@ function buildQuery({ userId, direction, symbol, transferType, rewards, holdType
         case 'none':
             break;
         case 'transfer':
-            actionTypes.push('transfer');
-            typeFilters.push({ transferType: 'point' }, { transferType: 'token' });
+            typeFilters.push(_getTransferActionByDirection(direction, userId));
             break;
         case 'convert':
-            actionTypes.push('convert');
-            if (direction === 'receive') {
-                typeFilters.push({
-                    $and: [
-                        { actionType: 'convert' },
-                        { transferType: 'token' },
-                        // TODO don't save restock to history
-                        { memo: { $regex: /^(?!restock:)/ } },
-                    ],
-                });
-
-                directionFilter.shift();
-                directionFilter.push({ receiver: 'c.point' });
-            } else if (direction === 'send') {
-                typeFilters.push({ $and: [{ actionType: 'convert' }, { transferType: 'point' }] });
-
-                directionFilter.shift();
-                directionFilter.push({ receiver: 'c.point' });
-            } else {
-                typeFilters.push({ transferType: 'point' }, { transferType: 'token' });
-            }
+            typeFilters.push(_getConvertActionByDirection(direction, userId));
             break;
         case 'all':
         default:
-            actionTypes.push('transfer', 'convert');
             typeFilters.push(
-                { actionType: 'transfer', transferType: 'point' },
-                { actionType: 'convert', transferType: 'token' },
-                { actionType: 'donation', transferType: 'point' }
+                _getTransferActionByDirection(direction, userId),
+                _getConvertActionByDirection(direction, userId)
             );
     }
 
     switch (rewards) {
         case 'none':
             break;
-        case 'reward':
-            actionTypes.push('reward');
-            break;
-        case 'claim':
-            actionTypes.push('claim');
-            break;
-        case 'donation':
-            actionTypes.push('donation');
-            typeFilters.push({ actionType: 'donation', transferType: 'point' });
+        case 'all':
+        default:
+            typeFilters.push(_getRewardActionByDirection(direction, userId));
+    }
+
+    switch (donations) {
+        case 'none':
             break;
         case 'all':
         default:
-            actionTypes.push('reward', 'claim', 'donation');
-            typeFilters.push({ actionType: 'donation', transferType: 'point' });
+            typeFilters.push(_getDonationActionByDirection(direction, userId));
     }
 
-    const holdTypes = _getHoldActionTypesByDirection(direction);
+    switch (claim) {
+        case 'none':
+            break;
+        case 'all':
+        default:
+            typeFilters.push(_getClaimActionByDirection(direction, userId));
+    }
 
     switch (holdType) {
         case 'none':
             break;
         case 'like':
-            actionTypes.push(...holdTypes);
-            typeFilters.push({ holdType: 'like' });
+            typeFilters.push({
+                ..._getHoldActionTypeByDirection(direction, userId),
+                holdType: 'like',
+            });
             break;
         case 'dislike':
-            actionTypes.push(...holdTypes);
-            typeFilters.push({ holdType: 'dislike' });
+            typeFilters.push({
+                ..._getHoldActionTypeByDirection(direction, userId),
+                holdType: 'dislike',
+            });
             break;
         case 'all':
         default:
-            actionTypes.push(...holdTypes);
-            typeFilters.push({ holdType: 'like' }, { holdType: 'dislike' });
+            typeFilters.push(_getHoldActionTypeByDirection(direction, userId));
     }
 
     return {
-        $and: [
-            symbolFilter,
-            { $or: directionFilter },
-            {
-                $and: [
-                    {
-                        actionType: {
-                            $in: actionTypes,
-                        },
-                    },
-                    { $or: typeFilters.length ? typeFilters : [{}] },
-                ],
-            },
-        ],
+        $and: [symbolFilter, { $or: typeFilters.length ? typeFilters : [{}] }],
     };
 }
 
-function _getHoldActionTypesByDirection(direction) {
+function _getConvertActionByDirection(direction, userId) {
     switch (direction) {
         case 'receive':
-            return ['unhold'];
+            return {
+                $and: [
+                    { actionType: 'convert' },
+                    { transferType: 'token' },
+                    // TODO don't save restock to history
+                    { memo: { $regex: /^(?!restock:)/ } },
+                    { receiver: 'c.point', sender: userId },
+                ],
+            };
         case 'send':
-            return ['hold'];
+            return {
+                $and: [
+                    { actionType: 'convert' },
+                    { transferType: 'point' },
+                    { receiver: 'c.point', sender: userId },
+                ],
+            };
         case 'all':
         default:
-            return ['hold', 'unhold'];
+            return { actionType: 'convert', sender: userId };
+    }
+}
+
+function _getTransferActionByDirection(direction, userId) {
+    switch (direction) {
+        case 'receive':
+            return { actionType: 'transfer', receiver: userId };
+        case 'send':
+            return { actionType: 'transfer', sender: userId };
+        case 'all':
+        default:
+            return {
+                $or: [
+                    { actionType: 'transfer', receiver: userId },
+                    { actionType: 'transfer', sender: userId },
+                ],
+            };
+    }
+}
+
+function _getDonationActionByDirection(direction, userId) {
+    switch (direction) {
+        case 'receive':
+            return { actionType: 'donation', transferType: 'point', receiver: userId };
+        case 'send':
+            return { actionType: 'donation', transferType: 'point', sender: userId };
+        case 'all':
+        default:
+            return {
+                $or: [
+                    { actionType: 'donation', transferType: 'point', receiver: userId },
+                    { actionType: 'donation', transferType: 'point', sender: userId },
+                ],
+            };
+    }
+}
+
+function _getClaimActionByDirection(direction, userId) {
+    switch (direction) {
+        case 'receive':
+            return { actionType: 'claim', receiver: userId };
+        case 'send':
+            return { actionType: 'claim', sender: userId };
+        case 'all':
+        default:
+            return { actionType: 'claim', receiver: userId };
+    }
+}
+
+function _getRewardActionByDirection(direction, userId) {
+    switch (direction) {
+        case 'receive':
+            return { actionType: 'reward', receiver: userId };
+        case 'send':
+            return { actionType: 'reward', sender: userId };
+        case 'all':
+        default:
+            return { actionType: 'reward', receiver: userId };
+    }
+}
+
+function _getHoldActionTypeByDirection(direction, userId) {
+    switch (direction) {
+        case 'receive':
+            return { actionType: 'unhold', sender: userId };
+        case 'send':
+            return { actionType: 'hold', sender: userId };
+        case 'all':
+        default:
+            return {
+                $or: [
+                    { actionType: 'hold', sender: userId },
+                    { actionType: 'unhold', sender: userId },
+                ],
+            };
     }
 }
 
