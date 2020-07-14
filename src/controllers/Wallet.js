@@ -62,7 +62,7 @@ class Wallet extends BasicController {
         symbol,
         transferType,
         rewards,
-        donations,
+        donation,
         claim,
         holdType,
         offset,
@@ -74,7 +74,7 @@ class Wallet extends BasicController {
             symbol,
             transferType,
             rewards,
-            donations,
+            donation,
             claim,
             holdType,
         });

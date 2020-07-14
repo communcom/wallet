@@ -4,7 +4,7 @@ function buildQuery({
     symbol,
     transferType,
     rewards,
-    donations,
+    donation,
     claim,
     holdType,
 }) {
@@ -83,7 +83,7 @@ function buildQuery({
             typeFilters.push(_getRewardActionByDirection(direction, userId));
     }
 
-    switch (donations) {
+    switch (donation) {
         case 'none':
             break;
         case 'all':
@@ -170,15 +170,15 @@ function _getTransferActionByDirection(direction, userId) {
 function _getDonationActionByDirection(direction, userId) {
     switch (direction) {
         case 'receive':
-            return { actionType: 'donation', transferType: 'point', receiver: userId };
+            return { actionType: 'donation', receiver: userId };
         case 'send':
-            return { actionType: 'donation', transferType: 'point', sender: userId };
+            return { actionType: 'donation', sender: userId };
         case 'all':
         default:
             return {
                 $or: [
-                    { actionType: 'donation', transferType: 'point', receiver: userId },
-                    { actionType: 'donation', transferType: 'point', sender: userId },
+                    { actionType: 'donation', receiver: userId },
+                    { actionType: 'donation', sender: userId },
                 ],
             };
     }
