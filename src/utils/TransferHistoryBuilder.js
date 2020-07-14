@@ -1,4 +1,13 @@
-function buildQuery({ userId, direction, symbol, transferType, rewards, holdType }) {
+function buildQuery({
+    userId,
+    direction,
+    symbol,
+    transferType,
+    rewards,
+    donations,
+    claim,
+    holdType,
+}) {
     const symbolFilter = {};
     const typeFilters = [];
 
@@ -69,22 +78,25 @@ function buildQuery({ userId, direction, symbol, transferType, rewards, holdType
     switch (rewards) {
         case 'none':
             break;
-        case 'reward':
+        case 'all':
+        default:
             typeFilters.push(_getRewardActionByDirection(direction, userId));
-            break;
-        case 'claim':
-            typeFilters.push(_getClaimActionByDirection(direction, userId));
-            break;
-        case 'donation':
-            typeFilters.push(_getDonationActionByDirection(direction, userId));
+    }
+
+    switch (donations) {
+        case 'none':
             break;
         case 'all':
         default:
-            typeFilters.push(
-                _getRewardActionByDirection(direction, userId),
-                _getClaimActionByDirection(direction, userId),
-                _getDonationActionByDirection(direction, userId)
-            );
+            typeFilters.push(_getDonationActionByDirection(direction, userId));
+    }
+
+    switch (claim) {
+        case 'none':
+            break;
+        case 'all':
+        default:
+            typeFilters.push(_getClaimActionByDirection(direction, userId));
     }
 
     switch (holdType) {
