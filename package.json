@@ -1,7 +1,7 @@
 {
   "name": "wallet",
   "version": "1.5.2",
-  "description": "",
+  "description": "wallet-service",
   "main": "./src/index.js",
   "scripts": {
     "start": "node src/index.js",
@@ -10,16 +10,8 @@
   },
   "author": "commun",
   "dependencies": {
-    "base58check": "^2.0.0",
     "cyberway-core-service": "^3.59.2",
-    "cyberwayjs": "^20.0.0-beta7",
-    "dotenv": "^8.1.0",
-    "eosjs-ecc": "^4.0.4",
-    "moment": "^2.24.0",
-    "node-fetch": "^2.6.0",
-    "node-nats-streaming": "^0.2.2",
-    "text-encoding": "^0.7.0",
-    "then-sleep": "^1.0.1"
+    "dotenv": "^8.1.0"
   },
   "devDependencies": {
     "cross-env": "^6.0.3",
