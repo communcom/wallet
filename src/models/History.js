@@ -91,57 +91,60 @@ module.exports = MongoDB.makeModel(
         index: [
             {
                 fields: {
-                    sender: 1,
-                    receiver: 1,
-                },
-                options: {
-                    background: true,
-                },
-            },
-            {
-                fields: {
-                    symbol: 1,
-                    sender: 1,
-                    receiver: 1,
-                },
-                options: {
-                    background: true,
-                },
-            },
-            {
-                fields: {
-                    symbol: 1,
-                    sender: 1,
-                    receiver: 1,
-                    memo: 1,
-                },
-                options: {
-                    background: true,
-                },
-            },
-            {
-                fields: {
                     symbol: 1,
                     sender: 1,
                     receiver: 1,
                     actionType: 1,
                     transferType: 1,
-                    rewardType: 1,
-                    holdType: 1,
                 },
-                options: {
-                    background: true,
+            },
+            {
+                fields: {
+                    sender: 1,
+                    receiver: 1,
+                    actionType: 1,
+                    transferType: 1,
                 },
             },
             {
                 fields: {
                     symbol: 1,
                     sender: 1,
-                    receiver: 1,
-                    tracery: 1,
+                    actionType: 1,
                 },
-                options: {
-                    background: true,
+            },
+            {
+                fields: {
+                    symbol: 1,
+                    receiver: 1,
+                    actionType: 1,
+                },
+            },
+            {
+                fields: {
+                    sender: 1,
+                    actionType: 1,
+                },
+            },
+            {
+                fields: {
+                    receiver: 1,
+                    actionType: 1,
+                },
+            },
+            {
+                fields: {
+                    symbol: 1,
+                    sender: 1,
+                    actionType: 1,
+                    holdType: 1,
+                },
+            },
+            {
+                fields: {
+                    sender: 1,
+                    actionType: 1,
+                    holdType: 1,
                 },
             },
         ],

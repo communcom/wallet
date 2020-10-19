@@ -188,7 +188,7 @@ class Gem {
             unfrozen,
         });
 
-        verbose('Created history transfer');
+        verbose('Created history transfer', creator, actionType);
     }
 }
 

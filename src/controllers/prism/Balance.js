@@ -133,7 +133,7 @@ class Balance {
                 { $set: { 'balances.$.frozen': amount } }
             );
 
-            verbose('Updated frozen points: ', account, quantity);
+            verbose('Updated frozen points:', account, quantity);
         }
     }
 
@@ -170,7 +170,7 @@ class Balance {
                     },
                 }
             );
-            verbose('Updated unfrozen points: ', owner, amount);
+            verbose('Updated unfrozen points:', owner, amount);
         }
     }
 }

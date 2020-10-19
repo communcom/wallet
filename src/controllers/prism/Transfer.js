@@ -203,7 +203,7 @@ class Transfer {
         await TransferModel.create(transferObject);
         await this.handleTransferHistory(transferObject, meta);
 
-        verbose('Created transfer object:', transferObject);
+        verbose(`Created transfer: ${sender}->${receiver} ${quantity} ${memo}`);
     }
 
     async handleClaim(action, trxData) {
@@ -278,7 +278,7 @@ class Transfer {
             referralData,
         });
 
-        verbose('Created history transfer');
+        verbose('Created history transfer', receiver, actionType);
     }
 
     async _processDonate({ sender, quantity, memo, trxId }, meta) {
